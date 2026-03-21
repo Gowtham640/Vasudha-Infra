@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createRouteSupabaseClient } from "../../../lib/supabase/client";
+import { createRouteSupabaseClient } from "../../../lib/supabase/server";
 import { logEvent } from "../../../lib/supabase/helpers";
 
 export async function POST(request: Request) {

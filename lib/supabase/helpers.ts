@@ -1,70 +1,30 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Database, SectionKey } from "../types";
+import type { Database, SectionKey, Json } from "../types";
+import type { SupabaseDatabaseClient } from "./server";
 
-export type SupabaseDatabaseClient = SupabaseClient<Database>;
-
-const hasName = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
-
-const resolveUserName = (user: User) => {
-  const metadata = user.user_metadata as Record<string, unknown> | null;
-  if (metadata) {
-    if (hasName(metadata.full_name)) {
-      return metadata.full_name;
-    }
-    if (hasName(metadata.name)) {
-      return metadata.name;
-    }
-    if (hasName(metadata.username)) {
-      return metadata.username;
-    }
-    if (hasName(metadata.given_name) && hasName(metadata.family_name)) {
-      return `${metadata.given_name} ${metadata.family_name}`;
-    }
-    if (hasName(metadata.given_name)) {
-      return metadata.given_name;
-    }
-  }
-
-  return user.email ?? "Vasudha User";
-};
-
-export async function ensurePublicUser(
+/**
+ * Determines whether the authenticated user already has a public profile.
+ */
+export async function hasPublicUser(
   supabase: SupabaseDatabaseClient,
-  user: User | null | undefined
-) {
-  if (!user?.id) {
-    return;
+  userId?: string | null
+): Promise<boolean> {
+  if (!userId) {
+    return false;
   }
 
-  const {
-    data: existingUser,
-    error: fetchError,
-  } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
-  if (fetchError) {
-    console.error("ensurePublicUser(fetch)", fetchError);
-    return;
+  if (error) {
+    console.error("hasPublicUser", error);
+    return false;
   }
 
-  if (existingUser) {
-    return;
-  }
-
-  const { error: insertError } = await supabase.from("users").insert({
-    id: user.id,
-    name: resolveUserName(user),
-    email: user.email ?? "",
-    role: "user",
-  });
-
-  if (insertError && insertError.code !== "23505") {
-    console.error("ensurePublicUser(insert)", insertError);
-  }
+  const typedData = data as { id?: string } | null;
+  return Boolean(typedData?.id);
 }
 
 export async function getSectionContent(
@@ -83,14 +43,16 @@ export async function getSectionContent(
     return null;
   }
 
-  if (!section?.id) {
+  const typedSection = section as (Record<string, unknown> & { id?: string }) | null;
+
+  if (!typedSection?.id) {
     return null;
   }
 
   const { data: sectionContent, error: sectionContentError } = await supabase
     .from("section_content")
     .select("content")
-    .eq("section_id", section.id)
+    .eq("section_id", typedSection.id)
     .maybeSingle();
 
   if (sectionContentError) {
@@ -98,13 +60,15 @@ export async function getSectionContent(
     return null;
   }
 
-  if (!sectionContent?.content) {
+  const typedSectionContent = sectionContent as (Record<string, unknown> & { content?: Json }) | null;
+
+  if (!typedSectionContent?.content) {
     return null;
   }
 
   return {
-    ...section,
-    content: sectionContent.content,
+    ...typedSection,
+    content: typedSectionContent.content,
   };
 }
 
@@ -195,13 +159,15 @@ export async function insertLead(
     project_id?: string;
   }
 ) {
-  const { error } = await supabase.from("leads").insert({
+  const row: Database["public"]["Tables"]["leads"]["Insert"] = {
     name: payload.name ?? null,
     phone: payload.phone ?? null,
     email: payload.email ?? null,
     message: payload.message ?? null,
     project_id: payload.project_id ?? null,
-  });
+  };
+
+  const { error } = await supabase.from("leads").insert(row);
 
   if (error) {
     console.error("insertLead", error);
@@ -216,10 +182,12 @@ export async function logEvent(
   event: string,
   metadata?: Record<string, unknown>
 ) {
-  const { error } = await supabase.from("logs").insert({
+  const row: Database["public"]["Tables"]["logs"]["Insert"] = {
     event,
-    metadata: metadata ?? null,
-  });
+    metadata: (metadata ?? null) as Json,
+  };
+
+  const { error } = await supabase.from("logs").insert(row);
 
   if (error) {
     console.error("logEvent", error);

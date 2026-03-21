@@ -1,5 +1,12 @@
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "../../lib/supabase/client";
+import { createServerSupabaseClient } from "../../lib/supabase/server";
+
+const buildAuthCallbackRedirect = () => {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  // Supabase OAuth callback handler exchanges the `code` for a session.
+  return `${base}/auth/callback`;
+};
 
 // Server action to start the Supabase OAuth handshake safely on the server.
 const signInWithGoogle = async () => {
@@ -7,6 +14,9 @@ const signInWithGoogle = async () => {
   const supabase = createServerSupabaseClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
+    options: {
+      redirectTo: buildAuthCallbackRedirect(),
+    },
   });
 
   if (error) {
@@ -44,7 +54,7 @@ export default function LoginPage() {
           </div>
 
           {/* Submit to the server action so Supabase returns the Google redirect URL. */}
-          <form action={signInWithGoogle} method="post" className="flex flex-col gap-4">
+          <form action={signInWithGoogle} className="flex flex-col gap-4">
           {/* Removed mt-10 -> vertical spacing now controlled by parent page (gives page full layout control) */}
             <button
               type="submit"

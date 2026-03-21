@@ -1,22 +1,24 @@
-import { createServerSupabaseClient } from "../../lib/supabase/client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import type { Database } from "../../lib/types";
+import type { Metadata } from "next";
+import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 
-type UserRoleRow = {
-  role: Database["public"]["Tables"]["users"]["Row"]["role"];
-};
-
-export const metadata = {
+export const metadata: Metadata = {
   title: "Vasudha Admin",
 };
+
+// These admin routes rely on Supabase SSR which uses `cookies`.
+// Force dynamic rendering so `next build` doesn't try to prerender statically.
+export const dynamic = "force-dynamic";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export default async function AdminLayout({ children }: Props) {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // This is a Server Component, so use the read-only Supabase client.
+  const supabase = createServerComponentSupabaseClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -25,17 +27,26 @@ export default async function AdminLayout({ children }: Props) {
     redirect("/login");
   }
 
-  const { data: user } = await (supabase as any)
-    .from("users")
-    .select("role")
-    .eq("id", session.user.id)
-    .maybeSingle();
-
-  const role = (user as UserRoleRow | null)?.role ?? "user";
-
-  if (!["admin", "owner"].includes(role)) {
-    redirect("/");
+  // Use the same DB functions your RLS policies are built on.
+  // This avoids failing role reads due to RLS on `public.users`.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect("/login");
   }
+  
+  const { data: role, error } = await supabase.rpc("get_my_role");
+
+if (error || !role) {
+  console.error("Failed to fetch role", error);
+  redirect("/");
+}
+
+if (role !== "admin" && role !== "owner") {
+  redirect("/");
+}
 
   return (
     <div className="min-h-screen bg-neutral-100">

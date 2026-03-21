@@ -1,5 +1,5 @@
 import { parseSectionContent } from "../../lib/schemas/sectionContent";
-import { createServerSupabaseClient } from "../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 import { getSectionContent } from "../../lib/supabase/helpers";
 import { SectionTitle } from "../../components/ui/SectionTitle";
 
@@ -18,7 +18,9 @@ const defaultAbout = {
 };
 
 export default async function AboutPage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const section = await getSectionContent(supabase, "about_overview");
   const parsed = parseSectionContent("about_overview", section?.content ?? defaultAbout);
   const content = parsed.success.success ? parsed.success.data : defaultAbout;

@@ -1,18 +1,20 @@
-import { createServerSupabaseClient } from "../../lib/supabase/client";
-import type { Database } from "../../lib/types";
+import {
+  createServerComponentSupabaseClient,
+} from "../../lib/supabase/server";
 
 type AdminLog = {
   event: string | null;
   created_at: string;
 };
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 type AdminLead = {
   name: string | null;
   created_at: string;
 };
 
 export default async function AdminDashboardPage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const logsResponse = await supabase.from("logs").select("event, created_at").order("created_at", { ascending: false }).limit(5);
   const leadsResponse = await supabase.from("leads").select("name, created_at").order("created_at", { ascending: false }).limit(5);
 

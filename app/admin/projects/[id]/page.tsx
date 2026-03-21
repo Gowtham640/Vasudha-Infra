@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServerSupabaseClient } from "../../../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../../../lib/supabase/server";
 import { ProjectEditor } from "../../../../components/admin/ProjectEditor";
 
 type Props = {
@@ -9,10 +9,33 @@ type Props = {
 };
 
 export default async function AdminProjectDetailPage({ params }: Props) {
-  const supabase = createServerSupabaseClient() as any;
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
+
+  if (params.id === "new") {
+    return (
+      <ProjectEditor
+        isNew
+        project={{
+          id: "",
+          name: "",
+          slug: "",
+          description: "",
+          status: "available",
+          price: null,
+          address: "",
+          landmark: "",
+          map_embed_url: "",
+        }}
+        images={[]}
+      />
+    );
+  }
+
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, description, status, price")
+    .select("id, name, slug, description, status, price, address, landmark, map_embed_url")
     .eq("id", params.id)
     .maybeSingle();
 
@@ -20,5 +43,11 @@ export default async function AdminProjectDetailPage({ params }: Props) {
     notFound();
   }
 
-  return <ProjectEditor project={project} />;
+  const { data: images } = await supabase
+    .from("project_images")
+    .select("id, image_path, order_index, alt_text, is_cover")
+    .eq("project_id", params.id)
+    .order("order_index", { ascending: true });
+
+  return <ProjectEditor project={project} images={images ?? []} />;
 }

@@ -1,53 +1,42 @@
-import Link from "next/link";
-import { createServerSupabaseClient } from "../../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../../lib/supabase/server";
 import type { Database } from "../../../lib/types";
+import { ProjectsManager } from "../../../components/admin/ProjectsManager";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type ProjectImageRow = Database["public"]["Tables"]["project_images"]["Row"];
+type ProjectImageForEditor = Pick<
+  ProjectImageRow,
+  "id" | "image_path" | "order_index" | "alt_text" | "is_cover"
+>;
+
+type ProjectEditorProject = Pick<
+  ProjectRow,
+  "id" | "name" | "slug" | "description" | "status" | "price" | "address" | "landmark" | "map_embed_url"
+>;
 
 export default async function AdminProjectsPage() {
-  const supabase = createServerSupabaseClient() as any;
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const projectsResponse = await supabase
     .from("projects")
-    .select("id, name, status, price")
+    .select("id, name, slug, description, status, price, address, landmark, map_embed_url")
     .order("created_at", { ascending: false });
-  const projects = (projectsResponse.data ?? []) as ProjectRow[];
+  const projects = (projectsResponse.data ?? []) as ProjectEditorProject[];
 
-  return (
-    <main className="pt-10 space-y-24">
-      {/* pt-10 -> controls distance from navbar/top */}
-      {/* space-y-24 -> controls spacing between sections (global layout control) */}
-      <div className="flex flex-col gap-6">
-        {/* Removed space-y-6 -> vertical spacing now controlled by parent page (gives page full layout control) */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-neutral-900">Project Catalog</h2>
-          <p className="text-sm text-neutral-500">You can edit existing projects below.</p>
-        </div>
-        <div className="flex flex-col gap-4">
-          {/* Removed space-y-4 -> vertical spacing now controlled by parent page (gives page full layout control) */}
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-6 py-4"
-            >
-              <div>
-                <p className="text-lg font-semibold text-neutral-900">{project.name}</p>
-                <p className="text-sm text-neutral-500">Status: {project.status ?? "available"}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-neutral-600">
-                  {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
-                </p>
-                <Link
-                  className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700"
-                  href={`/admin/projects/${project.id}`}
-                >
-                  Edit
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </main>
+  const projectsWithImages = await Promise.all(
+    projects.map(async (project) => {
+      const imagesResponse = await supabase
+        .from("project_images")
+        .select("id, image_path, order_index, alt_text, is_cover")
+        .eq("project_id", project.id)
+        .order("order_index", { ascending: true });
+
+      const projectImages = (imagesResponse.data ?? []) as ProjectImageForEditor[];
+
+      return { ...project, project_images: projectImages };
+    })
   );
+
+  return <ProjectsManager projects={projectsWithImages} />;
 }

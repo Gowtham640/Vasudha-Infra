@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createRouteSupabaseClient } from "../../../../lib/supabase/client";
+import { createRouteSupabaseClient } from "../../../../lib/supabase/server";
 import type { Database } from "../../../../lib/types";
 
 type SectionContentUpdatePayload = {
@@ -11,10 +11,7 @@ export async function PATCH(request: Request) {
   const supabase = createRouteSupabaseClient();
   const { section_id, content } = (await request.json()) as SectionContentUpdatePayload;
 
-  const { error } = await (supabase as any)
-    .from("section_content")
-    .update({ content })
-    .eq("section_id", section_id);
+  const { error } = await supabase.from("section_content").update({ content }).eq("section_id", section_id);
 
   if (error) {
     console.error("section update failed", error);

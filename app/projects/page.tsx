@@ -1,6 +1,6 @@
 import { SectionTitle } from "../../components/ui/SectionTitle";
 import { ProjectCard, ProjectSummary } from "../../components/projects/ProjectCard";
-import { createServerSupabaseClient } from "../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 import { getProjects, getSectionContent } from "../../lib/supabase/helpers";
 import { parseSectionContent } from "../../lib/schemas/sectionContent";
 import type { Database } from "../../lib/types";
@@ -13,7 +13,9 @@ const defaultProjectsSection = {
 };
 
 export default async function ProjectsPage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const section = await getSectionContent(supabase, "projects_list");
   const projects = (await getProjects(supabase)) as ProjectRow[];
   const content = parseSectionContent("projects_list", section?.content ?? defaultProjectsSection);

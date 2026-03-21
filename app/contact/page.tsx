@@ -1,5 +1,5 @@
 import { LeadForm } from "../../components/contact/LeadForm";
-import { createServerSupabaseClient } from "../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 import { getSectionContent } from "../../lib/supabase/helpers";
 import { parseSectionContent } from "../../lib/schemas/sectionContent";
 
@@ -10,7 +10,9 @@ const defaultContactCta = {
 };
 
 export default async function ContactPage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const section = await getSectionContent(supabase, "contact_cta");
   const parsed = parseSectionContent("contact_cta", section?.content ?? defaultContactCta);
   const content = parsed.success.success ? parsed.success.data : defaultContactCta;
@@ -20,7 +22,7 @@ export default async function ContactPage() {
       {/* pt-10 -> controls distance from navbar/top */}
       {/* space-y-24 -> controls spacing between sections (global layout control) */}
       <section className="grid gap-8 md:grid-cols-[1fr_1fr]">
-        <div className="flex flex-col gap-4 rounded-[2rem] border border-neutral-200 bg-white p-8 shadow-[0_30px_45px_rgba(8,60,32,0.08)]">
+        <div className="flex flex-col gap-4 rounded-4xl border border-neutral-200 bg-white p-8 shadow-[0_30px_45px_rgba(8,60,32,0.08)]">
         {/* Removed space-y-4 -> vertical spacing now controlled by parent page (gives page full layout control) */}
           <p className="text-sm uppercase tracking-[0.4em] text-neutral-500">Contact</p>
           <h1 className="text-3xl font-semibold text-neutral-900">{content.title}</h1>

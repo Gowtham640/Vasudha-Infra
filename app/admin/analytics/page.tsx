@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "../../../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../../../lib/supabase/server";
 
 type AnalyticsLog = {
   event: string | null;
@@ -7,7 +7,9 @@ type AnalyticsLog = {
 };
 
 export default async function AdminAnalyticsPage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const logsResponse = await supabase
     .from("logs")
     .select("event, metadata, created_at")

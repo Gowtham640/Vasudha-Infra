@@ -28,6 +28,7 @@ export type Database = {
           email: string;
           role: "user" | "admin" | "owner" | null;
         }>;
+        Relationships: [];
       };
       projects: {
         Row: {
@@ -63,6 +64,7 @@ export type Database = {
           landmark: string | null;
           map_embed_url: string | null;
         }>;
+        Relationships: [];
       };
       project_images: {
         Row: {
@@ -87,6 +89,7 @@ export type Database = {
           alt_text: string | null;
           is_cover: boolean | null;
         }>;
+        Relationships: [];
       };
       pages: {
         Row: {
@@ -97,6 +100,20 @@ export type Database = {
           seo_description: string | null;
           created_at: string | null;
         };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          seo_title?: string | null;
+          seo_description?: string | null;
+        };
+        Update: Partial<{
+          slug: string;
+          title: string;
+          seo_title: string | null;
+          seo_description: string | null;
+        }>;
+        Relationships: [];
       };
       sections: {
         Row: {
@@ -108,6 +125,14 @@ export type Database = {
           is_visible: boolean | null;
           created_at: string | null;
         };
+        Insert: {
+          id?: string;
+          page_id?: string | null;
+          type: string;
+          data_source_type?: string | null;
+          order_index: number;
+          is_visible?: boolean | null;
+        };
         Update: Partial<{
           page_id: string | null;
           type: string;
@@ -115,6 +140,7 @@ export type Database = {
           order_index: number;
           is_visible: boolean | null;
         }>;
+        Relationships: [];
       };
       section_content: {
         Row: {
@@ -130,6 +156,7 @@ export type Database = {
           section_id?: string | null;
           content?: Json;
         };
+        Relationships: [];
       };
       leads: {
         Row: {
@@ -148,6 +175,14 @@ export type Database = {
           message?: string | null;
           project_id?: string | null;
         };
+        Update: Partial<{
+          name: string | null;
+          phone: string | null;
+          email: string | null;
+          message: string | null;
+          project_id: string | null;
+        }>;
+        Relationships: [];
       };
       logs: {
         Row: {
@@ -160,8 +195,29 @@ export type Database = {
           event?: string | null;
           metadata?: Json | null;
         };
+        Update: Partial<{
+          event: string | null;
+          metadata: Json | null;
+        }>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: {
+      get_my_role: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      is_owner: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
+    Enums: Record<string, never>;
   };
 };
 

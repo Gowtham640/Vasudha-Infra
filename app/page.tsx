@@ -3,7 +3,7 @@ import { WhyChooseUs } from "../components/home/WhyChooseUs";
 import { FeaturedProjects } from "../components/home/FeaturedProjects";
 import { LeadBanner } from "../components/home/LeadBanner";
 import { ContactSection } from "../components/home/ContactSection";
-import { createServerSupabaseClient } from "../lib/supabase/client";
+import { createServerComponentSupabaseClient } from "../lib/supabase/server";
 import { getProjects, getSectionContent } from "../lib/supabase/helpers";
 import { SectionKey } from "../lib/types";
 import { parseSectionContent } from "../lib/schemas/sectionContent";
@@ -44,7 +44,9 @@ const safeParseSection = <T extends SectionKey>(key: T, payload: unknown, fallba
 };
 
 export default async function HomePage() {
-  const supabase = createServerSupabaseClient();
+  // Fix: Cookies can only be modified in a Server Action or Route Handler.
+  // Server Component: read-only Supabase client (no cookie writes during render).
+  const supabase = createServerComponentSupabaseClient();
   const heroSection = await getSectionContent(supabase, "home_hero");
   const whySection = await getSectionContent(supabase, "home_why_us");
   const leadSection = await getSectionContent(supabase, "home_lead_banner");
@@ -57,7 +59,7 @@ export default async function HomePage() {
   const contactContent = safeParseSection("home_contact", contactSection?.content, defaultContact);
 
   return (
-    <main className="pt-10 space-y-24">
+    <main className=" space-y-24">
       {/* pt-10 -> controls distance from navbar/top */}
       {/* space-y-24 -> controls spacing between sections (global layout control) */}
       <HomeHero content={heroContent} />
