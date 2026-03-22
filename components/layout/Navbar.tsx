@@ -1,16 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-
-const navigation = [
-  { label: "Home", href: "/" },
-  { label: "Projects", href: "/projects" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
+import { isAdminNavActive, isMainNavActive, MAIN_NAV_ITEMS } from "./nav";
 
 export function Navbar() {
   const [language, setLanguage] = useState<"EN" | "TE">("EN");
@@ -44,29 +39,54 @@ export function Navbar() {
   const canAccessAdmin = role === "owner" || role === "admin";
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-transparent border-b-neutral-200">
-      <div className="mx-auto flex flex-row max-w-6xl items-center justify-between px-5 py-3 md:px-6">
+    <header className="sticky top-0 z-50 bg-white backdrop-blur border-b border-transparent border-b-neutral-200">
+      <div className="mx-auto flex max-w-6xl flex-row items-center justify-between px-5  md:px-6">
+        {/* Brand: visible on all breakpoints */}
         <div className="flex items-center gap-3">
-          <div>
-            <p className="text-lg font-sora font-bold text-neutral-900">Vasudha</p>
-          </div>
+        <Image
+          src="/vasudha1.svg"
+          alt="Vasudha Logo"
+          width={120}
+          height={10}
+        />
         </div>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {navigation.map((item) => (
+        {/* Large screens: text links + current route highlight (green pill) */}
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+          {MAIN_NAV_ITEMS.map((item) => {
+            const active = isMainNavActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={clsx(
+                  "text-sm font-medium transition-colors duration-200 ease-out",
+                  "rounded-2xl px-4 py-2",
+                  active ? "bg-green-600 text-white" : "text-neutral-700 hover:text-neutral-900"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+
+          {canAccessAdmin ? (
             <Link
-              key={item.href}
-              href={item.href}
+              href="/admin"
               className={clsx(
-                "text-sm font-medium transition-colors",
-                pathname === item.href ? "text-(--brand-primary)" : "text-neutral-700"
+                "text-sm font-medium transition-colors duration-200 ease-out",
+                "rounded-2xl px-4 py-2",
+                isAdminNavActive(pathname)
+                  ? "bg-green-600 text-white"
+                  : "text-neutral-700 hover:text-neutral-900"
               )}
             >
-              {item.label}
+              Admin
             </Link>
-          ))}
+          ) : null}
         </nav>
 
+        {/* Language + login only (mobile has no other header links) */}
         <div className="flex items-center gap-3">
           <button
             className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold text-neutral-700 transition hover:border-(--brand-primary)"
@@ -76,7 +96,6 @@ export function Navbar() {
             {language}
           </button>
 
-          {/* Small person icon -> always goes to login. */}
           <Link
             href="/login"
             aria-label="Login"
@@ -95,38 +114,6 @@ export function Navbar() {
                 strokeLinecap="round"
               />
             </svg>
-          </Link>
-
-          {/* Shield icon -> only visible for owner/admin. */}
-          {canAccessAdmin && (
-            <Link
-              href="/admin"
-              aria-label="Admin dashboard"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-(--brand-primary) bg-white text-(--brand-primary) transition hover:bg-(--brand-primary) hover:text-white"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M12 2L20 6V12C20 17 16 21 12 22C8 21 4 17 4 12V6L12 2Z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M9.5 12L11.2 13.7L14.8 10.1"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Link>
-          )}
-
-          <Link
-            className="rounded-full border border-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-primary) transition hover:bg-(--brand-dark) hover:text-white"
-            href="/contact"
-          >
-            Talk with us
           </Link>
         </div>
       </div>

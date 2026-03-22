@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Footer } from "../components/layout/Footer";
+import { MobileBottomBar, MOBILE_BOTTOM_NAV_SPACER_CLASS } from "../components/layout/MobileBottomBar";
 import { Navbar } from "../components/layout/Navbar";
 import { FloatingActions } from "../components/layout/FloatingActions";
 import { PageShell } from "../components/layout/PageShell";
@@ -39,6 +40,9 @@ export default async function RootLayout({
         <Navbar />
         <PageShell>{children}</PageShell>
         <Footer />
+        {/* Reserves space above the fixed mobile tab bar so footer/content are not covered */}
+        <div className={`${MOBILE_BOTTOM_NAV_SPACER_CLASS} shrink-0 lg:hidden`} aria-hidden />
+        <MobileBottomBar />
         <FloatingActions />
       </body>
     </html>

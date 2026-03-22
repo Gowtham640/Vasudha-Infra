@@ -9,7 +9,7 @@ import { SectionKey } from "../lib/types";
 import { parseSectionContent } from "../lib/schemas/sectionContent";
 
 const defaultHero = {
-  title: "Exclusive Plots & Homes in Amaravati",
+  title: "Symbol of Growth and Trust",
   subtitle: "Sculpted living spaces near the river and expressway.",
   description: "Fixed sections, flexible content, premium experiences.",
   ctaLabel: "Talk with us",
@@ -59,7 +59,7 @@ export default async function HomePage() {
   const contactContent = safeParseSection("home_contact", contactSection?.content, defaultContact);
 
   return (
-    <main className=" space-y-24">
+    <main className="flex flex-col gap-24">
       {/* pt-10 -> controls distance from navbar/top */}
       {/* space-y-24 -> controls spacing between sections (global layout control) */}
       <HomeHero content={heroContent} />
