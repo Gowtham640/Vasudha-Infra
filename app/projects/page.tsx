@@ -1,52 +1,38 @@
-import { SectionTitle } from "../../components/ui/SectionTitle";
-import { ProjectCard, ProjectSummary } from "../../components/projects/ProjectCard";
 import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
-import { getProjects, getSectionContent } from "../../lib/supabase/helpers";
-import { parseSectionContent } from "../../lib/schemas/sectionContent";
+import { getProjects } from "../../lib/supabase/helpers";
+import { buildStorageUrl } from "../../lib/supabase/storage";
+import { ProjectsGridClient } from "../../components/projects/ProjectsGridClient";
 import type { Database } from "../../lib/types";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 
-const defaultProjectsSection = {
-  title: "Explore Our Projects",
-  description: "Hand-picked plots, layouts, and premium homes designed for Amaravati.",
-};
-
 export default async function ProjectsPage() {
-  // Fix: Cookies can only be modified in a Server Action or Route Handler.
-  // Server Component: read-only Supabase client (no cookie writes during render).
   const supabase = createServerComponentSupabaseClient();
-  const section = await getSectionContent(supabase, "projects_list");
   const projects = (await getProjects(supabase)) as ProjectRow[];
-  const content = parseSectionContent("projects_list", section?.content ?? defaultProjectsSection);
-  const sectionBody = content.success.success ? content.success.data : defaultProjectsSection;
+  const projectImageRows = await supabase
+    .from("project_images")
+    .select("project_id,image_path,is_cover,order_index")
+    .order("is_cover", { ascending: false })
+    .order("order_index", { ascending: true });
 
-  const projectSummaries: ProjectSummary[] = projects.map((project: ProjectRow) => ({
-    id: project.id,
-    name: project.name,
-    slug: project.slug,
-    location: project.address ?? undefined,
-    price: project.price ?? undefined,
-    status: project.status ?? undefined,
-    description: project.description ?? undefined,
-  }));
+  const imageMap = new Map<string, string>();
+  for (const row of projectImageRows.data ?? []) {
+    if (!row.project_id || imageMap.has(row.project_id)) continue;
+    imageMap.set(row.project_id, buildStorageUrl(row.image_path));
+  }
 
   return (
-    <main className="pt-10 space-y-24">
-      {/* pt-10 -> controls distance from navbar/top */}
-      {/* space-y-24 -> controls spacing between sections (global layout control) */}
-      <section className="flex flex-col gap-8">
-        {/* Removed space-y-10 -> vertical spacing now controlled by parent page (gives page full layout control) */}
-        <div className="flex flex-col gap-4">
-          {/* Removed space-y-4 -> vertical spacing now controlled by parent page (gives page full layout control) */}
-          <SectionTitle title={sectionBody.title} subtitle={sectionBody.description} />
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {projectSummaries.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
-      </section>
+    <main className="space-y-24">
+      <ProjectsGridClient
+        projects={projects.map((project) => ({
+          id: project.id,
+          name: project.name,
+          address: project.address,
+          price: project.price,
+          status: project.status,
+          imageUrl: imageMap.get(project.id) ?? null,
+        }))}
+      />
     </main>
   );
 }

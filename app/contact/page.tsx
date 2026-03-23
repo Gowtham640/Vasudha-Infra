@@ -10,26 +10,27 @@ const defaultContactCta = {
 };
 
 export default async function ContactPage() {
-  // Fix: Cookies can only be modified in a Server Action or Route Handler.
-  // Server Component: read-only Supabase client (no cookie writes during render).
   const supabase = createServerComponentSupabaseClient();
   const section = await getSectionContent(supabase, "contact_cta");
   const parsed = parseSectionContent("contact_cta", section?.content ?? defaultContactCta);
   const content = parsed.success.success ? parsed.success.data : defaultContactCta;
 
   return (
-    <main className="pt-10 space-y-24">
-      {/* pt-10 -> controls distance from navbar/top */}
-      {/* space-y-24 -> controls spacing between sections (global layout control) */}
-      <section className="grid gap-8 md:grid-cols-[1fr_1fr]">
-        <div className="flex flex-col gap-4 rounded-4xl border border-neutral-200 bg-white p-8 shadow-[0_30px_45px_rgba(8,60,32,0.08)]">
-        {/* Removed space-y-4 -> vertical spacing now controlled by parent page (gives page full layout control) */}
-          <p className="text-sm uppercase tracking-[0.4em] text-neutral-500">Contact</p>
-          <h1 className="text-3xl font-semibold text-neutral-900">{content.title}</h1>
-          {content.subtitle && <p className="text-neutral-600">{content.subtitle}</p>}
-          <p className="text-sm text-neutral-500">+91 99999 99999 · hello@vasudha.com</p>
+    <main className="space-y-24">
+      <section className="min-h-[80vh] flex items-center py-12 px-4">
+        <div className="container max-w-md">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl gradient-gold flex items-center justify-center mx-auto mb-6">
+              <span className="text-3xl">🏡</span>
+            </div>
+            <h1 className="font-hero text-3xl md:text-4xl font-bold text-neutral-900">{content.title}</h1>
+            <p className="text-neutral-600 mt-3">{content.subtitle}</p>
+          </div>
+          <div className="mt-8 bg-white rounded-2xl p-6 shadow-card">
+            <LeadForm />
+          </div>
+          <p className="mt-6 text-center text-xs text-neutral-500">Your information is safe with us. We do not spam.</p>
         </div>
-        <LeadForm />
       </section>
     </main>
   );

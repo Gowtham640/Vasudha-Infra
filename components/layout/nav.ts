@@ -4,16 +4,15 @@
  */
 export type MainNavItem = {
   href: string;
-  /** Shown on large screens in the top navbar */
-  label: string;
+  labelKey: string;
 };
 
 export const MAIN_NAV_ITEMS: MainNavItem[] = [
-  { href: "/", label: "Home" },
-  { href: "/projects", label: "Projects" },
-  { href: "/about", label: "About Us" },
+  { href: "/", labelKey: "nav.home" },
+  { href: "/projects", labelKey: "nav.projects" },
+  { href: "/about", labelKey: "nav.about" },
   /** Lead capture / enquiry */
-  { href: "/contact", label: "Contact" },
+  { href: "/contact", labelKey: "nav.contact" },
 ];
 
 /** True when this top-level route should show the active (green) state */

@@ -1,6 +1,6 @@
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="page-shell mx-auto flex min-h-screen max-w-6xl flex-col gap-10 md:px-6">
+    <main className="page-shell mx-auto flex min-h-screen w-full flex-col gap-10">
       {children}
     </main>
   );

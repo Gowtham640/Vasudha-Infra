@@ -5,12 +5,16 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { Globe, LogIn, LogOut, Shield } from "lucide-react";
 import { isAdminNavActive, isMainNavActive, MAIN_NAV_ITEMS } from "./nav";
+import { useI18n } from "../i18n/I18nProvider";
+import { createBrowserSupabaseClient } from "../../lib/supabase/client";
 
 export function Navbar() {
-  const [language, setLanguage] = useState<"EN" | "TE">("EN");
+  const { lang, setLang, t } = useI18n();
   const pathname = usePathname();
   const [role, setRole] = useState<"owner" | "admin" | "user" | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,6 +29,7 @@ export function Navbar() {
         const data = (await res.json()) as { role?: "owner" | "admin" | "user" | null };
         if (cancelled) return;
         setRole(data.role ?? null);
+        setIsLoggedIn(Boolean(data.role));
       } catch {
         // If role cannot be fetched, we hide the admin link by default.
       }
@@ -37,22 +42,23 @@ export function Navbar() {
   }, []);
 
   const canAccessAdmin = role === "owner" || role === "admin";
+  const supabase = createBrowserSupabaseClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white backdrop-blur border-b border-transparent border-b-neutral-200">
-      <div className="mx-auto flex max-w-6xl flex-row items-center justify-between px-5  md:px-6">
+    <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 glass border-b border-border/30">
+      <div className="container mx-auto flex max-w-6xl flex-row items-center justify-between px-5 md:px-6 h-16">
         {/* Brand: visible on all breakpoints */}
         <div className="flex items-center gap-3">
-        <Image
-          src="/vasudha1.svg"
-          alt="Vasudha Logo"
-          width={120}
-          height={10}
-        />
+          <Image src="/vasudha1.svg" alt="Vasudha Logo" width={120} height={10} />
         </div>
 
         {/* Large screens: text links + current route highlight (green pill) */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+        <nav className="flex items-center gap-1" aria-label="Primary">
           {MAIN_NAV_ITEMS.map((item) => {
             const active = isMainNavActive(pathname, item.href);
             return (
@@ -62,10 +68,10 @@ export function Navbar() {
                 className={clsx(
                   "text-sm font-medium transition-colors duration-200 ease-out",
                   "rounded-2xl px-4 py-2",
-                  active ? "bg-green-600 text-white" : "text-neutral-700 hover:text-neutral-900"
+                  active ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:text-primary"
                 )}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             );
           })}
@@ -76,45 +82,43 @@ export function Navbar() {
               className={clsx(
                 "text-sm font-medium transition-colors duration-200 ease-out",
                 "rounded-2xl px-4 py-2",
-                isAdminNavActive(pathname)
-                  ? "bg-green-600 text-white"
-                  : "text-neutral-700 hover:text-neutral-900"
+                  "flex items-center gap-1.5",
+                  isAdminNavActive(pathname) ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:text-primary"
               )}
             >
-              Admin
+                <Shield className="w-4 h-4" />
+                {t("nav.admin")}
             </Link>
           ) : null}
         </nav>
 
-        {/* Language + login only (mobile has no other header links) */}
+        {/* Language and auth actions */}
         <div className="flex items-center gap-3">
           <button
-            className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold text-neutral-700 transition hover:border-(--brand-primary)"
-            onClick={() => setLanguage(language === "EN" ? "TE" : "EN")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium hover:bg-secondary transition-colors"
+            onClick={() => setLang(lang === "en" ? "te" : "en")}
             aria-label="Toggle language"
           >
-            {language}
+            <Globe className="w-4 h-4" />
+            {lang === "en" ? "తెలుగు" : "English"}
           </button>
 
           <Link
             href="/login"
-            aria-label="Login"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300 bg-white transition hover:border-(--brand-primary)"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M20 21C20 17.134 16.4183 14 12 14C7.58172 14 4 17.134 4 21"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
+            <LogIn className="w-4 h-4" />
+            {t("nav.login")}
           </Link>
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              {t("nav.logout")}
+            </button>
+          ) : null}
         </div>
       </div>
     </header>

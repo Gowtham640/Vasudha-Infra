@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 import clsx from "clsx";
 import { isAdminNavActive, isMainNavActive, MAIN_NAV_ITEMS } from "./nav";
+import { useI18n } from "../i18n/I18nProvider";
 
 /**
  * Spacer height for scrollable content so nothing sits under the fixed bar.
@@ -97,6 +98,7 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
 };
 
 export function MobileBottomBar() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [role, setRole] = useState<"owner" | "admin" | "user" | null>(null);
 
@@ -140,7 +142,7 @@ export function MobileBottomBar() {
               <Link
                 key={item.href}
                 href={item.href}
-                aria-label={item.label}
+                aria-label={t(item.labelKey)}
                 className={clsx(
                   "flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-2xl p-2 transition-all duration-200 ease-out",
                   "active:scale-[0.94] active:opacity-90",

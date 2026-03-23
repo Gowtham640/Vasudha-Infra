@@ -4,8 +4,9 @@ import { MobileBottomBar, MOBILE_BOTTOM_NAV_SPACER_CLASS } from "../components/l
 import { Navbar } from "../components/layout/Navbar";
 import { FloatingActions } from "../components/layout/FloatingActions";
 import { PageShell } from "../components/layout/PageShell";
+import { I18nProvider } from "../components/i18n/I18nProvider";
 import type { Metadata } from "next";
-import { Inter, Sora, Open_Sans, Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Inter, Sora, Open_Sans, Atkinson_Hyperlegible_Next, Playfair_Display, Montserrat, DM_Sans } from "next/font/google";
 
 export const metadata: Metadata = {
   title: "Vasudha || Amaravati Real Estate",
@@ -24,6 +25,9 @@ const atkinson = Atkinson_Hyperlegible_Next({
   subsets: ["latin"],
   variable: "--font-atkinson",
 });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-hero" });
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-heading" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-body" });
 
 export default async function RootLayout({
   children,
@@ -35,15 +39,17 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`bg-neutral-100 ${inter.variable} ${sora.variable} ${openSans.variable} ${atkinson.variable}`}
+        className={`bg-neutral-100 ${inter.variable} ${sora.variable} ${openSans.variable} ${atkinson.variable} ${playfair.variable} ${montserrat.variable} ${dmSans.variable}`}
       >
-        <Navbar />
-        <PageShell>{children}</PageShell>
-        <Footer />
-        {/* Reserves space above the fixed mobile tab bar so footer/content are not covered */}
-        <div className={`${MOBILE_BOTTOM_NAV_SPACER_CLASS} shrink-0 lg:hidden`} aria-hidden />
-        <MobileBottomBar />
-        <FloatingActions />
+        <I18nProvider>
+          <Navbar />
+          <PageShell>{children}</PageShell>
+          <Footer />
+          {/* Reserves space above the fixed mobile tab bar so footer/content are not covered */}
+          <div className={`${MOBILE_BOTTOM_NAV_SPACER_CLASS} shrink-0 lg:hidden`} aria-hidden />
+          <MobileBottomBar />
+          <FloatingActions />
+        </I18nProvider>
       </body>
     </html>
   );
