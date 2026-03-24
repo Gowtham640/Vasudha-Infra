@@ -45,6 +45,72 @@ const logProjects = (method: string, step: string, detail?: Record<string, unkno
   console.log(`[api/admin/projects ${method}] ${step}`, detail !== undefined ? JSON.stringify(detail) : "");
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isStorageNotFoundError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+  const candidate = error as { status?: number; statusCode?: string; message?: string };
+  return (
+    candidate.status === 404 ||
+    candidate.statusCode === "404" ||
+    (typeof candidate.message === "string" && candidate.message.toLowerCase().includes("object not found"))
+  );
+};
+
+const sourceObjectCandidates = (oldPath: string) => {
+  const normalized = normalizeStorageObjectKey(oldPath);
+  const withBucketPrefix = normalizeStorageObjectKey(`images/${normalized}`);
+  return Array.from(new Set([normalized, withBucketPrefix]));
+};
+
+type StagedTransferResult = {
+  sourcePath: string;
+  finalPath: string;
+};
+
+const transferStagedImageToProjectPath = async (
+  bucket: ReturnType<ReturnType<typeof createRouteSupabaseClient>["storage"]["from"]>,
+  sourcePath: string,
+  projectId: string,
+  orderIndex: number
+): Promise<StagedTransferResult> => {
+  const sourceCandidates = sourceObjectCandidates(sourcePath);
+  let blob: Blob | null = null;
+  let resolvedSourcePath: string | null = null;
+  let lastDownloadError: { message: string } | null = null;
+
+  for (const candidate of sourceCandidates) {
+    const { data, error } = await bucket.download(candidate);
+    if (!error && data) {
+      blob = data;
+      resolvedSourcePath = candidate;
+      break;
+    }
+    lastDownloadError = error ?? { message: "Unknown download error." };
+  }
+
+  if (!blob || !resolvedSourcePath) {
+    throw new Error(lastDownloadError?.message ?? "Unable to download staged image.");
+  }
+
+  const sourceFileName = resolvedSourcePath.split("/").pop() ?? `${orderIndex}.bin`;
+  const finalPath = `${projectId}/${sourceFileName}`;
+  const { error: uploadError } = await bucket.upload(finalPath, blob, { upsert: false });
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const removeCandidates = sourceObjectCandidates(resolvedSourcePath);
+  await bucket.remove(removeCandidates);
+
+  return {
+    sourcePath: resolvedSourcePath,
+    finalPath,
+  };
+};
+
 export async function PATCH(request: Request) {
   logProjects("PATCH", "start update project");
   const supabase = createRouteSupabaseClient();
@@ -138,86 +204,64 @@ export async function POST(request: Request) {
 
     logProjects("POST", "substep: resolved cover path", { coverPath });
 
-    const imageRows: Database["public"]["Tables"]["project_images"]["Insert"][] = paths.map((image_path, order_index) => ({
+    // Rewrite: transfer staged objects to final project folder first, then insert DB rows with final paths.
+    const bucket = supabase.storage.from("images");
+    const transferred: StagedTransferResult[] = [];
+
+    for (let index = 0; index < paths.length; index += 1) {
+      const stagedPath = paths[index];
+      try {
+        logProjects("POST", "substep: transfer staged image", {
+          index,
+          stagedPath,
+          projectId: data.id,
+        });
+        const transfer = await transferStagedImageToProjectPath(bucket, stagedPath, data.id, index);
+        transferred.push(transfer);
+        logProjects("POST", "substep: transfer OK", transfer);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to transfer staged image.";
+        console.error("[api/admin/projects POST] staged transfer FAILED", message, error);
+        logProjects("POST", "rollback: remove final uploads + delete project", {
+          uploadedCount: transferred.length,
+          projectId: data.id,
+        });
+        if (transferred.length > 0) {
+          await bucket.remove(transferred.map((entry) => entry.finalPath));
+        }
+        await supabase.from("projects").delete().eq("id", data.id);
+        return NextResponse.json({ error: message }, { status: 500 });
+      }
+    }
+
+    const coverTransfer = transferred.find(
+      (entry) => normalizeStorageObjectKey(entry.sourcePath) === normalizeStorageObjectKey(coverPath)
+    );
+    const coverFinalPath = coverTransfer?.finalPath ?? transferred[0]?.finalPath ?? null;
+
+    const imageRows: Database["public"]["Tables"]["project_images"]["Insert"][] = transferred.map((entry, order_index) => ({
       project_id: data.id,
-      image_path,
+      image_path: entry.finalPath,
       order_index,
       alt_text: null,
-      is_cover: image_path === coverPath,
+      is_cover: entry.finalPath === coverFinalPath,
     }));
 
-    logProjects("POST", "substep: bulk insert project_images", { rowCount: imageRows.length, imageRows });
+    logProjects("POST", "substep: bulk insert project_images with final paths", { rowCount: imageRows.length, imageRows });
 
-    const { data: insertedRows, error: imagesError } = await supabase
-      .from("project_images")
-      .insert(imageRows)
-      .select("id, image_path");
-
+    const { error: imagesError } = await supabase.from("project_images").insert(imageRows);
     if (imagesError) {
       console.error("[api/admin/projects POST] project_images.insert FAILED", imagesError.message, imagesError);
-      logProjects("POST", "rollback: remove staged files + delete project", { paths });
-      await supabase.storage.from("images").remove(paths);
+      logProjects("POST", "rollback: remove final uploads + delete project", {
+        projectId: data.id,
+        finalPaths: transferred.map((entry) => entry.finalPath),
+      });
+      await bucket.remove(transferred.map((entry) => entry.finalPath));
       await supabase.from("projects").delete().eq("id", data.id);
       return NextResponse.json({ error: imagesError.message }, { status: 500 });
     }
 
-    logProjects("POST", "substep: project_images rows inserted", { insertedRows });
-
-    // Issue 2: After DB rows exist, move staged objects from `pending/...` to final `{projectId}/...` (same layout as POST /project-images).
-    const bucket = supabase.storage.from("images");
-    const moved: { oldPath: string; newPath: string }[] = [];
-
-    let moveIndex = 0;
-    for (const row of insertedRows ?? []) {
-      moveIndex += 1;
-      const oldPath = normalizeStorageObjectKey(row.image_path ?? "");
-      const fileName = oldPath.split("/").pop() ?? "";
-      const newPath = `${data.id}/${fileName}`;
-
-      logProjects("POST", `substep: storage.move ${moveIndex}/${insertedRows?.length ?? 0}`, {
-        sourceKeyOldPath: oldPath,
-        destinationKeyNewPath: newPath,
-        rowId: row.id,
-        note: "move() looks up object at sourceKey inside bucket images",
-      });
-
-      const { error: moveError } = await bucket.move(oldPath, newPath);
-      if (moveError) {
-        console.error("[api/admin/projects POST] storage.move FAILED", moveError.message, moveError);
-        logProjects("POST", "rollback: reverse previous moves", { movedCount: moved.length });
-        for (const pair of [...moved].reverse()) {
-          await bucket.move(pair.newPath, pair.oldPath);
-        }
-        await supabase.from("project_images").delete().eq("project_id", data.id);
-        await supabase.from("projects").delete().eq("id", data.id);
-        return NextResponse.json({ error: moveError.message }, { status: 500 });
-      }
-
-      logProjects("POST", "substep: move OK; updating DB image_path to final key", { rowId: row.id, newPath });
-
-      moved.push({ oldPath, newPath });
-
-      const { error: pathUpdateError } = await supabase
-        .from("project_images")
-        .update({ image_path: newPath })
-        .eq("id", row.id);
-
-      if (pathUpdateError) {
-        console.error("[api/admin/projects POST] project_images.update after move FAILED", pathUpdateError.message, pathUpdateError);
-        logProjects("POST", "rollback: move file back + reverse prior moves", { newPath, oldPath });
-        await bucket.move(newPath, oldPath);
-        for (const pair of [...moved.slice(0, -1)].reverse()) {
-          await bucket.move(pair.newPath, pair.oldPath);
-        }
-        await supabase.from("project_images").delete().eq("project_id", data.id);
-        await supabase.from("projects").delete().eq("id", data.id);
-        return NextResponse.json({ error: pathUpdateError.message }, { status: 500 });
-      }
-
-      logProjects("POST", "substep: DB path updated for row", { rowId: row.id, image_path: newPath });
-    }
-
-    logProjects("POST", "done: all staging files moved and DB paths updated");
+    logProjects("POST", "done: transferred from pending to final and inserted DB rows");
   } else {
     logProjects("POST", "no image_paths; skip project_images + storage move");
   }

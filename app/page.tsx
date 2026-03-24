@@ -24,6 +24,7 @@ const defaultWhyUs = {
     { title: "Decades of Experience", description: "Delivering 40+ layouts across Andhra Pradesh.", stat: "25 yrs" },
     { title: "Prime Locations", description: "Plots close to Amaravati's planned city and riverfront.", stat: "5+ layouts" },
     { title: "Transparent Payments", description: "Milestone-based payment schedules with digital receipts.", stat: "100% clarity" },
+    { title: "Easy Payments", description: "Simple and hassle-free payment options.", stat: "Varied options available" },
   ],
 };
 
@@ -62,8 +63,9 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="flex flex-col gap-20">
+    <main className="flex flex-col gap-20 ">
       <HomeHero content={heroContent} />
+      <div className="px-2">
       <WhyChooseUs content={whyContent} />
       <FeaturedProjects
         projects={projects.map((project) => ({
@@ -74,26 +76,23 @@ export default async function HomePage() {
           imageUrl: imageMap.get(project.id) ?? null,
         }))}
       />
-      <section className="relative overflow-hidden bg-green-700 py-14 px-4">
-        <img src="/vasudha1.svg" alt="Vasudha background logo" className="absolute inset-0 h-full w-full object-contain opacity-10 pointer-events-none" />
-        <div className="container relative grid gap-8 md:grid-cols-2">
-          <div className="rounded-2xl bg-white/95 p-6 shadow-card">
-            <h2 className="font-hero text-2xl text-neutral-900">{leadContent.title}</h2>
-            <p className="text-neutral-600 mt-2">{leadContent.description}</p>
-            <div className="mt-5">
-              <LeadForm />
+      </div>
+      <section className="relative overflow-hidden bg-green-700 py-10 px-4">
+        <img src="/vasudha1.svg" alt="Vasudha background logo" className="absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-multiply pointer-events-none" />
+        <div className="container relative grid grid-cols-2 gap-4 md:gap-8 items-start">
+          <div className="rounded-xl bg-white/90 p-2 md:p-5">
+            <h2 className="font-hero text-xl md:text-2xl text-neutral-900">{leadContent.title}</h2>
+            <div className="mt-3">
+              <LeadForm compact />
             </div>
           </div>
-          <div className="rounded-2xl bg-black/20 text-white p-8">
-            <h3 className="font-heading text-2xl">Contact Us</h3>
-            <p className="mt-3 text-white/85">Call or message us to discuss available plots, layouts, and visits.</p>
-            <div className="mt-6 space-y-3">
-              <a href="tel:+919999999999" className="block text-lg hover:text-amber-300 transition-colors">
-                +91 99999 99999
-              </a>
-              <a href="mailto:hello@vasudha.com" className="block text-lg hover:text-amber-300 transition-colors">
-                hello@vasudha.com
-              </a>
+          <div className="text-white py-1 md:py-3">
+            <h3 className="font-heading text-xl md:text-2xl">Contact Us</h3>
+            <p className="mt-2 text-white/90 text-sm md:text-base">Call or message us to discuss available plots, layouts, and visits.</p>
+            <div className="mt-4 space-y-2 text-sm md:text-base">
+              <a href="tel:+919999999999" className="block underline-offset-2 hover:underline">+91 99999 99999</a>
+              <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="block underline-offset-2 hover:underline">WhatsApp: +91 99999 99999</a>
+              <a href="mailto:hello@vasudhaproperties.com" className="block underline-offset-2 hover:underline">hello@vasudhaproperties.com</a>
             </div>
           </div>
         </div>

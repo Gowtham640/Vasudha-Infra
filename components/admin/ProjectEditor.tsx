@@ -4,24 +4,37 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { buildStorageUrl } from "../../lib/supabase/storage";
+import { normalizeMapEmbedUrlInput } from "../../lib/mapEmbedUrl";
 
 type ProjectEditorProps = {
   isNew?: boolean;
+  formId?: string;
+  hideDefaultActions?: boolean;
   /**
    * When true, create/delete should not navigate away from the current admin page.
    * This is used by the in-page widget UI on `/admin/projects`.
    */
   stayOnList?: boolean;
+  onDraftChangeAction?: (draft: {
+    name: string;
+    slug: string;
+    description: string;
+    status: string;
+    price: string;
+    address: string;
+    landmark: string;
+    map_embed_url: string;
+  }) => void;
   /**
    * Called after a successful project save (including image upload).
    * Used by parent widgets to close modals.
    */
-  onAfterSave?: () => void;
+  onAfterSaveAction?: () => void;
   /**
    * Called after a successful project delete.
    * Used by parent widgets to close modals.
    */
-  onAfterDelete?: () => void;
+  onAfterDeleteAction?: () => void;
   project: {
     id: string;
     name: string;
@@ -44,9 +57,12 @@ type ProjectEditorProps = {
 
 export function ProjectEditor({
   isNew = false,
+  formId,
+  hideDefaultActions = false,
   stayOnList = false,
-  onAfterSave,
-  onAfterDelete,
+  onDraftChangeAction,
+  onAfterSaveAction,
+  onAfterDeleteAction,
   project,
   images: initialImages,
 }: ProjectEditorProps) {
@@ -59,7 +75,7 @@ export function ProjectEditor({
     price: project.price?.toString() ?? "",
     address: project.address ?? "",
     landmark: project.landmark ?? "",
-    map_embed_url: project.map_embed_url ?? "",
+    map_embed_url: normalizeMapEmbedUrlInput(project.map_embed_url ?? ""),
   });
   const [projectId, setProjectId] = useState(project.id);
   const [images, setImages] = useState(initialImages);
@@ -70,7 +86,13 @@ export function ProjectEditor({
 
   const handleChange =
     (field: keyof typeof form) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setForm((prev) => ({ ...prev, [field]: event.target.value }));
+      const value =
+        field === "map_embed_url" ? normalizeMapEmbedUrlInput(event.target.value) : event.target.value;
+      setForm((prev) => {
+        const next = { ...prev, [field]: value };
+        onDraftChangeAction?.(next);
+        return next;
+      });
     };
 
   const saveProject = async (options?: { image_paths?: string[]; cover_image_path?: string | null }) => {
@@ -83,7 +105,7 @@ export function ProjectEditor({
       price: form.price ? Number(form.price) : null,
       address: form.address || null,
       landmark: form.landmark || null,
-      map_embed_url: form.map_embed_url || null,
+      map_embed_url: normalizeMapEmbedUrlInput(form.map_embed_url) || null,
     };
 
     if (isNew && options?.image_paths && options.image_paths.length > 0) {
@@ -208,7 +230,7 @@ export function ProjectEditor({
       setCoverFileIndex(0);
       setMessage("Project saved.");
       router.refresh();
-      onAfterSave?.();
+      onAfterSaveAction?.();
       return;
     }
 
@@ -223,7 +245,7 @@ export function ProjectEditor({
     if (uploadSuccess) {
       setMessage("Project saved.");
       router.refresh();
-      onAfterSave?.();
+      onAfterSaveAction?.();
     }
   };
 
@@ -250,7 +272,7 @@ export function ProjectEditor({
       router.push("/admin/projects");
       router.refresh();
     }
-    onAfterDelete?.();
+    onAfterDeleteAction?.();
   };
 
   const handleDeleteImage = async (id: string) => {
@@ -302,7 +324,11 @@ export function ProjectEditor({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-lg">
+    <form
+      id={formId}
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-lg"
+    >
       <h3 className="text-lg font-semibold text-neutral-900">{isNew ? "Add project" : "Edit project"}</h3>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
         Name
@@ -420,20 +446,26 @@ export function ProjectEditor({
           </div>
         </div>
       )}
-      <div className="flex items-center gap-3">
-        <button className="primary-button w-full text-center" type="submit">
-          {isNew ? "Create project" : "Save changes"}
-        </button>
-        {!isNew && (
+      {!hideDefaultActions && (
+        <div className="flex items-center gap-3">
           <button
-            type="button"
-            onClick={handleDeleteProject}
-            className="w-full rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700"
+            className="w-full rounded-full border border-green-700 px-4 py-2 text-sm font-semi"
+            type="submit"
           >
-            Delete project
+            {isNew ? "Create project" : "Submit Changes"}
           </button>
-        )}
-      </div>
+
+          {!isNew && (
+            <button
+              type="button"
+              onClick={handleDeleteProject}
+              className="w-full rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700"
+            >
+              Delete project
+            </button>
+          )}
+        </div>
+      )}
       {message && <p className="text-sm text-neutral-600">{message}</p>}
     </form>
   );

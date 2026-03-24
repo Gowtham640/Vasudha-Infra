@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, Layers, MapPin, ArrowRight } from "lucide-react";
@@ -20,6 +20,7 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
   const [view, setView] = useState<"stack" | "list">("stack");
   const [current, setCurrent] = useState(0);
   const featured = useMemo(() => projects, [projects]);
+  const isDraggingRef = useRef(false);
 
   const handleNext = () => {
     if (current < featured.length - 1) setCurrent(current + 1);
@@ -83,18 +84,29 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
                       drag="x"
                       dragConstraints={{ left: 0, right: 0 }}
                       dragElastic={0.1}
+                      onDragStart={() => {
+                        isDraggingRef.current = true;
+                      }}
                       onDragEnd={(_, info) => {
                         if (info.offset.x < -50) handleNext();
                         else if (info.offset.x > 50) handlePrev();
+                        // Reset after current click event cycle to avoid accidental navigation while dragging with mouse.
+                        window.setTimeout(() => {
+                          isDraggingRef.current = false;
+                        }, 0);
                       }}
                     >
-                      <Link href={`/projects/${project.id}`} className="relative block w-full h-full rounded-2xl overflow-hidden shadow-card-hover">
-                        <img
-                          src={project.imageUrl ?? "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&q=80"}
-                          alt={project.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-tl from-black/60 via-transparent to-transparent" />
+                      <Link
+                        href={`/projects/${project.id}`}
+                        onClick={(event) => {
+                          if (isDraggingRef.current) {
+                            event.preventDefault();
+                          }
+                        }}
+                        className="relative block w-full h-full rounded-2xl overflow-hidden shadow-card-hover"
+                      >
+                        <img src={project.imageUrl ?? "/vasudha1.svg"} alt={project.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-linear-to-tl from-black/60 via-transparent to-transparent" />
                         <div className="absolute bottom-0 left-0 p-5">
                           <h3 className="font-heading text-lg font-bold text-white">{project.name}</h3>
                           <div className="flex items-center gap-1 mt-1">
@@ -136,11 +148,7 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
                 className="bg-white"
               >
                 <Link href={`/projects/${project.id}`} className="flex gap-4 p-3 rounded-xl shadow-card hover:shadow-card-hover transition-shadow cursor-pointer bg-white">
-                  <img
-                    src={project.imageUrl ?? "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&q=80"}
-                    alt={project.name}
-                    className="w-28 h-28 rounded-lg object-cover flex-shrink-0"
-                  />
+                  <img src={project.imageUrl ?? "/vasudha1.svg"} alt={project.name} className="w-28 h-28 rounded-lg object-cover shrink-0" />
                   <div className="flex flex-col justify-center">
                     <h3 className="font-heading font-semibold text-neutral-900">{project.name}</h3>
                     <div className="flex items-center gap-1 mt-1">

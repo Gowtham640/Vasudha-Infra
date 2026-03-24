@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Database } from "../../lib/types";
 import { ProjectEditor } from "./ProjectEditor";
+import { normalizeMapEmbedUrlInput } from "../../lib/mapEmbedUrl";
 
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectImageRow = Database["public"]["Tables"]["project_images"]["Row"];
@@ -23,11 +24,22 @@ type ProjectWithImages = ProjectEditorProject & {
 
 
 export function ProjectsManager({ projects }: { projects: ProjectWithImages[] }) {
+  const emptyNewProjectDraft = {
+    name: "",
+    slug: "",
+    description: "",
+    status: "available",
+    price: "",
+    address: "",
+    landmark: "",
+    map_embed_url: "",
+  };
   const [editor, setEditor] = useState<null | {
     isNew: boolean;
     project: ProjectEditorProject;
     images: ProjectImageForEditor[];
   }>(null);
+  const [newProjectDraft, setNewProjectDraft] = useState(emptyNewProjectDraft);
 
   useEffect(() => {
     if (editor) {
@@ -41,14 +53,14 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
       isNew: true,
       project: {
         id: "",
-        name: "",
-        slug: "",
-        description: null,
-        status: "available",
-        price: null,
-        address: null,
-        landmark: null,
-        map_embed_url: null,
+        name: newProjectDraft.name,
+        slug: newProjectDraft.slug,
+        description: newProjectDraft.description || null,
+        status: newProjectDraft.status || "available",
+        price: newProjectDraft.price ? Number(newProjectDraft.price) : null,
+        address: newProjectDraft.address || null,
+        landmark: newProjectDraft.landmark || null,
+        map_embed_url: normalizeMapEmbedUrlInput(newProjectDraft.map_embed_url) || null,
       },
       images: [],
     });
@@ -61,6 +73,11 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
       project: p,
       images: project_images,
     });
+  };
+  const closeEditor = () => setEditor(null);
+  const discardNewProjectDraft = () => {
+    setNewProjectDraft(emptyNewProjectDraft);
+    setEditor(null);
   };
 
   return (
@@ -110,27 +127,59 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
       {editor && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-neutral-900/40 pt-10">
           <div className="w-full max-w-2xl px-4">
-          <div className="project-manager max-h-[80vh] overflow-y-auto rounded-2xl bg-white p-4">
-            <div className="mb-3 flex justify-end">
+          <div className="flex h-[85vh] flex-col overflow-hidden rounded-2xl bg-white">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3">
+              <p className="text-sm font-semibold text-neutral-700">
+                {editor.isNew ? "Create project" : "Edit project"}
+              </p>
               <button
                 type="button"
-                onClick={() => setEditor(null)}
+                onClick={closeEditor}
                 className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700"
               >
                 Close
               </button>
             </div>
+            <div className="project-manager min-h-0 flex-1 overflow-y-auto p-4">
 
             {/* Key remounts the editor when switching projects so `images` state matches fetched `project_images`. */}
             <ProjectEditor
               key={editor.isNew ? "new" : editor.project.id}
               isNew={editor.isNew}
+              formId={editor.isNew ? "create-project-form" : undefined}
+              hideDefaultActions={editor.isNew}
               stayOnList
-              onAfterSave={() => setEditor(null)}
-              onAfterDelete={() => setEditor(null)}
+              onDraftChangeAction={(draft) => {
+                if (!editor.isNew) {
+                  return;
+                }
+                setNewProjectDraft(draft);
+              }}
+              onAfterSaveAction={() => {
+                if (editor.isNew) {
+                  setNewProjectDraft(emptyNewProjectDraft);
+                }
+                setEditor(null);
+              }}
+              onAfterDeleteAction={() => setEditor(null)}
               project={editor.project}
               images={editor.images}
             />
+            </div>
+            {editor.isNew && (
+              <div className="flex items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+                <button
+                  type="button"
+                  onClick={discardNewProjectDraft}
+                  className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50"
+                >
+                  Discard
+                </button>
+                <button className="text-white rounded-4xl bg-green-800 px-5 py-2 text-sm" type="submit" form="create-project-form">
+                  Create
+                </button>
+              </div>
+            )}
           </div>
           </div>
           <style jsx>{`

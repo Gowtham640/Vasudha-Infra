@@ -3,7 +3,7 @@
 
 import { LeadForm } from "../contact/LeadForm";
 import { buildStorageUrl } from "../../lib/supabase/storage";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ArrowLeft, CheckCircle, Navigation, CreditCard, Image as ImageIcon, LayoutGrid, Layers, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +29,7 @@ export type ProjectDetailProps = {
 export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
   const [layoutView, setLayoutView] = useState<"stack" | "list">("stack");
   const [current, setCurrent] = useState(0);
+  const isDraggingRef = useRef(false);
   const coverImage = project.project_images?.find((img) => img.is_cover) ?? project.project_images?.[0];
   const images = (project.project_images ?? []).map((img) => ({
     id: img.id,
@@ -36,12 +37,18 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
     alt: img.alt_text ?? project.name,
   }));
   const coverImageUrl = coverImage ? buildStorageUrl(coverImage.image_path) : null;
+  const handleNext = () => {
+    if (current < images.length - 1) setCurrent(current + 1);
+  };
+  const handlePrev = () => {
+    if (current > 0) setCurrent(current - 1);
+  };
 
   return (
     <div className="space-y-10">
-      <div className="relative h-[50vh] md:h-[60vh] rounded-2xl overflow-hidden">
-        <img src={coverImageUrl ?? "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&q=80"} alt={coverImage?.alt_text ?? project.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      <div className="relative h-[50vh]  md:h-[60vh] overflow-hidden">
+        <img src={coverImageUrl ?? "/vasudha1.svg"} alt={coverImage?.alt_text ?? project.name} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
         <Link href="/projects" className="absolute top-4 left-4 md:top-8 w-10 h-10 rounded-full glass flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-neutral-900" />
         </Link>
@@ -108,10 +115,32 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
                       key={img.id}
                       className="absolute w-[85%] md:w-[400px] h-[280px] cursor-pointer"
                       initial={{ scale: 0.9, x: 300, opacity: 0 }}
-                      animate={{ scale: offset === 0 ? 1 : 0.9, x: offset * 40, opacity: Math.abs(offset) > 1 ? 0 : 1 }}
+                      animate={{
+                        scale: offset === 0 ? 1 : 0.9,
+                        x: offset * 40,
+                        zIndex: images.length - Math.abs(offset),
+                        opacity: Math.abs(offset) > 1 ? 0 : 1,
+                      }}
                       exit={{ scale: 0.85, x: -300, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      onClick={() => setCurrent(index)}
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.1}
+                      onDragStart={() => {
+                        isDraggingRef.current = true;
+                      }}
+                      onDragEnd={(_, info) => {
+                        if (info.offset.x < -50) handleNext();
+                        else if (info.offset.x > 50) handlePrev();
+                        window.setTimeout(() => {
+                          isDraggingRef.current = false;
+                        }, 0);
+                      }}
+                      onClick={() => {
+                        if (!isDraggingRef.current) {
+                          setCurrent(index);
+                        }
+                      }}
                     >
                       <img src={img.url} alt={img.alt} className="w-full h-full rounded-2xl object-cover shadow-card-hover" />
                     </motion.div>
@@ -141,7 +170,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <div className="grid grid-cols-2 gap-3 mt-4">
             {["Clubhouse", "Parks", "Water Lines", "24x7 Security"].map((amenity) => (
               <div key={amenity} className="flex items-center gap-2 p-3 rounded-xl bg-neutral-100">
-                <div className="w-2 h-2 rounded-full bg-green-700 flex-shrink-0" />
+                <div className="w-2 h-2 rounded-full bg-green-700 shrink-0" />
                 <span className="text-sm text-neutral-800">{amenity}</span>
               </div>
             ))}
@@ -156,7 +185,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <div className="space-y-2 mt-4">
             {[project.landmark ?? "Expressway", "Hospitals", "Schools"].map((nearby) => (
               <div key={nearby} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-100">
-                <MapPin className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-amber-700 shrink-0" />
                 <span className="text-sm text-neutral-800">{nearby}</span>
               </div>
             ))}
@@ -171,7 +200,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <div className="space-y-2 mt-4">
             {["40% on booking", "30% on foundation", "30% on possession"].map((plan, i) => (
               <div key={plan} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-300">
-                <span className="w-7 h-7 rounded-full bg-green-700/10 text-green-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                <span className="w-7 h-7 rounded-full bg-green-700/10 text-green-700 text-xs font-bold flex items-center justify-center shrink-0">
                   {i + 1}
                 </span>
                 <span className="text-sm text-neutral-800">{plan}</span>

@@ -47,7 +47,7 @@ export function AboutClient({ headline, body, stats }: AboutClientProps) {
   return (
     <main className="space-y-12">
       <section className="relative min-h-[55vh] flex items-center overflow-hidden rounded-2xl">
-        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=80" alt="About hero" className="absolute inset-0 h-full w-full object-cover" />
+        <img src="https://images.pexels.com/photos/440731/pexels-photo-440731.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="About hero" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
         <div className="relative px-8 py-16 max-w-2xl">
           <h1 className="font-hero text-4xl md:text-5xl font-bold text-white">{headline || t("about.title")}</h1>

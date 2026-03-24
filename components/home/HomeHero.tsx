@@ -22,7 +22,7 @@ export function HomeHero({ content }: { content: HomeHeroContent }) {
     <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden">
       <div className="absolute inset-0">
         <Image
-          src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=80"
+          src="https://images.pexels.com/photos/440731/pexels-photo-440731.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
           alt="Premium land"
           fill
           className="object-cover"

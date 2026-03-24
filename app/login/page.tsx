@@ -54,13 +54,13 @@ export default function LoginPage() {
           </div>
 
           {/* Submit to the server action so Supabase returns the Google redirect URL. */}
-          <form action={signInWithGoogle} className="flex flex-col gap-4">
+          <form action={signInWithGoogle} className="flex flex-col rounded-4xl bg-green-900 gap-4">
           {/* Removed mt-10 -> vertical spacing now controlled by parent page (gives page full layout control) */}
             <button
               type="submit"
               className="primary-button inline-flex items-center justify-center gap-2 w-full px-6 py-3 text-base font-semibold uppercase tracking-[0.2em]"
             >
-              Continue with Google
+              Sign in / Sign up with Google
             </button>
           </form>
 
