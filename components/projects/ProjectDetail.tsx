@@ -4,6 +4,7 @@
 import { LeadForm } from "../contact/LeadForm";
 import { buildStorageUrl } from "../../lib/supabase/storage";
 import { useRef, useState } from "react";
+import { useResponsiveGalleryViewMode } from "../../lib/useResponsiveGalleryViewMode";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ArrowLeft, CheckCircle, Navigation, CreditCard, Image as ImageIcon, LayoutGrid, Layers, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +28,7 @@ export type ProjectDetailProps = {
 };
 
 export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
-  const [layoutView, setLayoutView] = useState<"stack" | "list">("stack");
+  const [layoutView, setLayoutView] = useResponsiveGalleryViewMode();
   const [current, setCurrent] = useState(0);
   const isDraggingRef = useRef(false);
   const coverImage = project.project_images?.find((img) => img.is_cover) ?? project.project_images?.[0];

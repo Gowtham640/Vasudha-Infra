@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useResponsiveGalleryViewMode } from "../../lib/useResponsiveGalleryViewMode";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, Layers, MapPin, ArrowRight } from "lucide-react";
@@ -17,7 +18,7 @@ export type HomeProject = {
 
 export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
   const { t } = useI18n();
-  const [view, setView] = useState<"stack" | "list">("stack");
+  const [view, setView] = useResponsiveGalleryViewMode();
   const [current, setCurrent] = useState(0);
   const featured = useMemo(() => projects, [projects]);
   const isDraggingRef = useRef(false);

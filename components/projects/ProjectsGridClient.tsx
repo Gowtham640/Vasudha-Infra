@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { useResponsiveGalleryViewMode } from "../../lib/useResponsiveGalleryViewMode";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, LayoutGrid, Layers, MapPin, SlidersHorizontal, X } from "lucide-react";
 import { useI18n } from "../i18n/I18nProvider";
@@ -20,7 +21,7 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
   const { t } = useI18n();
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [view, setView] = useState<"stack" | "list">("stack");
+  const [view, setView] = useResponsiveGalleryViewMode();
   const [current, setCurrent] = useState(0);
   const isDraggingRef = useRef(false);
 
@@ -204,7 +205,7 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 max-h-[60vh]"
+              className="fixed bottom-15 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 max-h-[60vh]"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-heading font-bold text-lg text-neutral-900">{t("projects.filter")}</h3>
