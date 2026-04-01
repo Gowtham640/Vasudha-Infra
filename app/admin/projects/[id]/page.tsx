@@ -27,6 +27,9 @@ export default async function AdminProjectDetailPage({ params }: Props) {
           address: "",
           landmark: "",
           map_embed_url: "",
+          city: "",
+          district: "",
+          amenities: [],
         }}
         images={[]}
       />
@@ -35,7 +38,7 @@ export default async function AdminProjectDetailPage({ params }: Props) {
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, slug, description, status, price, address, landmark, map_embed_url")
+    .select("id, name, slug, description, status, price, address, landmark, map_embed_url, city, district, amenities")
     .eq("id", params.id)
     .maybeSingle();
 

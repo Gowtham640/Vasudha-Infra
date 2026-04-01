@@ -11,7 +11,18 @@ type ProjectImageForEditor = Pick<
 
 type ProjectEditorProject = Pick<
   ProjectRow,
-  "id" | "name" | "slug" | "description" | "status" | "price" | "address" | "landmark" | "map_embed_url"
+  | "id"
+  | "name"
+  | "slug"
+  | "description"
+  | "status"
+  | "price"
+  | "address"
+  | "landmark"
+  | "map_embed_url"
+  | "city"
+  | "district"
+  | "amenities"
 >;
 
 export default async function AdminProjectsPage() {
@@ -20,7 +31,7 @@ export default async function AdminProjectsPage() {
   const supabase = createServerComponentSupabaseClient();
   const projectsResponse = await supabase
     .from("projects")
-    .select("id, name, slug, description, status, price, address, landmark, map_embed_url")
+    .select("id, name, slug, description, status, price, address, landmark, map_embed_url, city, district, amenities")
     .order("created_at", { ascending: false });
   const projects = (projectsResponse.data ?? []) as ProjectEditorProject[];
 

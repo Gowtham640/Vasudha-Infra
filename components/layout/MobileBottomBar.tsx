@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -59,8 +60,8 @@ export function MobileBottomBar() {
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex flex-col">
       {/* Top utility bar to mirror plot-path-finder mobile behavior */}
       <div className="glass border-b border-border/30 flex items-center justify-between px-4 h-14">
-        <Link href="/" className="font-hero text-lg font-bold text-primary">
-          Vasudha
+        <Link href="/" className="flex items-center" aria-label="Vasudha home">
+          <Image src="/vasudha1.svg" alt="Vasudha Logo" width={96} height={24} priority />
         </Link>
         <div className="flex items-center gap-2">
           {isLoggedIn ? (
@@ -113,7 +114,7 @@ export function MobileBottomBar() {
                   />
                 ) : null}
                 <Icon className={`w-5 h-5 relative z-10 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                <span className={`text-[10px] font-medium relative z-10 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                <span className={`text-[8px] font-medium relative z-10 ${active ? "text-primary" : "text-muted-foreground"}`}>
                   {t(item.labelKey)}
                 </span>
               </Link>

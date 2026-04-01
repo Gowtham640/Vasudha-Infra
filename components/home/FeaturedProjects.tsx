@@ -4,7 +4,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutGrid, Layers, MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
 import { useI18n } from "../i18n/I18nProvider";
 
 export type HomeProject = {
@@ -17,7 +17,6 @@ export type HomeProject = {
 
 export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
   const { t } = useI18n();
-  const [view, setView] = useState<"stack" | "list">("stack");
   const [current, setCurrent] = useState(0);
   const featured = useMemo(() => projects, [projects]);
   const isDraggingRef = useRef(false);
@@ -37,30 +36,8 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
           <h2 className="font-hero text-3xl md:text-4xl font-bold text-neutral-900">{t("featured.title")}</h2>
           <p className="text-neutral-600 mt-2">{t("featured.subtitle")}</p>
         </motion.div>
-
-        <div className="flex justify-center gap-2 mb-8">
-          <button
-            onClick={() => setView("stack")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              view === "stack" ? "bg-green-700 text-white" : "bg-neutral-100 text-neutral-700"
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            {t("scroll")}
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              view === "list" ? "bg-green-700 text-white" : "bg-neutral-100 text-neutral-700"
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            {t("list")}
-          </button>
-        </div>
-
-        {view === "stack" ? (
-          <div className="relative w-full overflow-hidden">
+        {/* Mobile and tablet: swipe stack cards */}
+        <div className="relative w-full overflow-hidden lg:hidden">
             <div className="relative h-[380px] md:h-[440px] flex items-center justify-center">
               <AnimatePresence mode="popLayout">
                 {featured.map((project, index) => {
@@ -111,10 +88,10 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
                           <h3 className="font-heading text-lg font-bold text-white">{project.name}</h3>
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-3.5 h-3.5 text-white/80" />
-                            <span className="text-sm text-white/80">{project.address ?? "Amaravati"}</span>
+                            <span className="text-sm text-white/80">{project.address ?? t("common.amaravati")}</span>
                           </div>
                           <p className="font-heading text-amber-300 font-bold mt-2">
-                            {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
+                            {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
                           </p>
                         </div>
                       </Link>
@@ -130,40 +107,43 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
             </div>
             {current === 0 ? (
               <motion.div className="flex items-center justify-center gap-1 mt-3 text-neutral-500 text-sm" animate={{ x: [0, 10, 0] }} transition={{ repeat: 3, duration: 1 }}>
-                <span>Swipe</span>
+                <span>{t("projects.swipe")}</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.div>
             ) : null}
           </div>
-        ) : (
-          <div className="space-y-4 max-w-lg mx-auto">
-            {featured.map((project, i) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-white"
-              >
-                <Link href={`/projects/${project.id}`} className="flex gap-4 p-3 rounded-xl shadow-card hover:shadow-card-hover transition-shadow cursor-pointer bg-white">
-                  <img src={project.imageUrl ?? "/vasudha1.svg"} alt={project.name} className="w-28 h-28 rounded-lg object-cover shrink-0" />
-                  <div className="flex flex-col justify-center">
-                    <h3 className="font-heading font-semibold text-neutral-900">{project.name}</h3>
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="w-3.5 h-3.5 text-neutral-500" />
-                      <span className="text-sm text-neutral-500">{project.address ?? "Amaravati"}</span>
-                    </div>
-                    <p className="font-heading text-sm font-bold text-amber-700 mt-2">
-                      {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
-                    </p>
+
+        {/* Desktop and larger: always show horizontal card layout */}
+        <div className="hidden items-center justify-center  lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {featured.map((project, i) => (
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+              whileHover={{ y: -4 }}
+              className="group cursor-pointer rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all bg-white"
+            >
+              <Link href={`/projects/${project.id}`}>
+                <div className="relative aspect-4/3 overflow-hidden">
+                  <img src={project.imageUrl ?? "/vasudha1.svg"} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent via-transparent to-white" />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-heading font-semibold text-base text-neutral-900 truncate">{project.name}</h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3 text-neutral-500 shrink-0" />
+                    <span className="text-sm text-neutral-500 truncate">{project.address ?? t("common.amaravati")}</span>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                  <p className="font-heading text-sm font-bold text-amber-700 mt-2">
+                    {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
+                  </p>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

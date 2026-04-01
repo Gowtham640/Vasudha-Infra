@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { buildStorageUrl } from "../../lib/supabase/storage";
 import { normalizeMapEmbedUrlInput } from "../../lib/mapEmbedUrl";
+import { AP_TG_CITIES, AP_TG_DISTRICTS, OPEN_PLOT_AMENITIES } from "../../lib/projectMetadata";
 
 type ProjectEditorProps = {
   isNew?: boolean;
@@ -24,6 +25,9 @@ type ProjectEditorProps = {
     address: string;
     landmark: string;
     map_embed_url: string;
+    city: string;
+    district: string;
+    amenities: string[];
   }) => void;
   /**
    * Called after a successful project save (including image upload).
@@ -45,6 +49,9 @@ type ProjectEditorProps = {
     address?: string | null;
     landmark?: string | null;
     map_embed_url?: string | null;
+    city?: string | null;
+    district?: string | null;
+    amenities?: string[] | null;
   };
   images: Array<{
     id: string;
@@ -76,7 +83,16 @@ export function ProjectEditor({
     address: project.address ?? "",
     landmark: project.landmark ?? "",
     map_embed_url: normalizeMapEmbedUrlInput(project.map_embed_url ?? ""),
+    city: project.city ?? "",
+    district: project.district ?? "",
+    amenities: project.amenities ?? [],
   });
+  const [cityQuery, setCityQuery] = useState(project.city ?? "");
+  const [districtQuery, setDistrictQuery] = useState(project.district ?? "");
+  const [amenityQuery, setAmenityQuery] = useState("");
+  const [cityOpen, setCityOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
   const [projectId, setProjectId] = useState(project.id);
   const [images, setImages] = useState(initialImages);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -106,6 +122,9 @@ export function ProjectEditor({
       address: form.address || null,
       landmark: form.landmark || null,
       map_embed_url: normalizeMapEmbedUrlInput(form.map_embed_url) || null,
+      city: form.city || null,
+      district: form.district || null,
+      amenities: form.amenities,
     };
 
     if (isNew && options?.image_paths && options.image_paths.length > 0) {
@@ -323,6 +342,61 @@ export function ProjectEditor({
     setMessage("Image metadata saved.");
   };
 
+  const filteredCities = AP_TG_CITIES.filter((city) =>
+    city.toLowerCase().includes(cityQuery.trim().toLowerCase())
+  );
+  const filteredDistricts = AP_TG_DISTRICTS.filter((district) =>
+    district.toLowerCase().includes(districtQuery.trim().toLowerCase())
+  );
+  const filteredAmenities = OPEN_PLOT_AMENITIES.filter(
+    (amenity) =>
+      amenity.toLowerCase().includes(amenityQuery.trim().toLowerCase()) &&
+      !form.amenities.some((selectedAmenity) => selectedAmenity.toLowerCase() === amenity.toLowerCase())
+  );
+
+  const selectCity = (city: string) => {
+    setForm((prev) => {
+      const next = { ...prev, city };
+      onDraftChangeAction?.(next);
+      return next;
+    });
+    setCityQuery(city);
+    setCityOpen(false);
+  };
+
+  const selectDistrict = (district: string) => {
+    setForm((prev) => {
+      const next = { ...prev, district };
+      onDraftChangeAction?.(next);
+      return next;
+    });
+    setDistrictQuery(district);
+    setDistrictOpen(false);
+  };
+
+  const addAmenity = (amenity: string) => {
+    setForm((prev) => {
+      if (prev.amenities.some((selectedAmenity) => selectedAmenity.toLowerCase() === amenity.toLowerCase())) {
+        return prev;
+      }
+      const next = { ...prev, amenities: [...prev.amenities, amenity] };
+      onDraftChangeAction?.(next);
+      return next;
+    });
+    setAmenityQuery("");
+  };
+
+  const removeAmenity = (amenity: string) => {
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        amenities: prev.amenities.filter((selectedAmenity) => selectedAmenity !== amenity),
+      };
+      onDraftChangeAction?.(next);
+      return next;
+    });
+  };
+
   return (
     <form
       id={formId}
@@ -335,7 +409,7 @@ export function ProjectEditor({
         <input
           value={form.name}
           onChange={handleChange("name")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
           required
         />
       </label>
@@ -344,7 +418,7 @@ export function ProjectEditor({
         <input
           value={form.slug}
           onChange={handleChange("slug")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
           required
         />
       </label>
@@ -353,7 +427,7 @@ export function ProjectEditor({
         <input
           value={form.status}
           onChange={handleChange("status")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -362,7 +436,7 @@ export function ProjectEditor({
           type="number"
           value={form.price}
           onChange={handleChange("price")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -370,7 +444,7 @@ export function ProjectEditor({
         <textarea
           value={form.description}
           onChange={handleChange("description")}
-          className="min-h-28 rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="min-h-28 rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -378,7 +452,7 @@ export function ProjectEditor({
         <input
           value={form.address}
           onChange={handleChange("address")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -386,7 +460,7 @@ export function ProjectEditor({
         <input
           value={form.landmark}
           onChange={handleChange("landmark")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -394,9 +468,84 @@ export function ProjectEditor({
         <input
           value={form.map_embed_url}
           onChange={handleChange("map_embed_url")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-[var(--brand-primary)]"
+          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
+      <SingleSelectField
+        label="City"
+        placeholder="Type or choose city"
+        query={cityQuery}
+        selectedValue={form.city}
+        isOpen={cityOpen}
+        options={filteredCities}
+        onQueryChange={(value) => {
+          setCityQuery(value);
+          if (value.trim().length > 0) {
+            setCityOpen(true);
+          }
+          setForm((prev) => {
+            const next = { ...prev, city: value };
+            onDraftChangeAction?.(next);
+            return next;
+          });
+        }}
+        onToggle={() => setCityOpen((prev) => !prev)}
+        onSelect={selectCity}
+        onClear={() => {
+          setForm((prev) => {
+            const next = { ...prev, city: "" };
+            onDraftChangeAction?.(next);
+            return next;
+          });
+          setCityQuery("");
+        }}
+      />
+      <SingleSelectField
+        label="District"
+        placeholder="Type or choose district"
+        query={districtQuery}
+        selectedValue={form.district}
+        isOpen={districtOpen}
+        options={filteredDistricts}
+        onQueryChange={(value) => {
+          setDistrictQuery(value);
+          if (value.trim().length > 0) {
+            setDistrictOpen(true);
+          }
+          setForm((prev) => {
+            const next = { ...prev, district: value };
+            onDraftChangeAction?.(next);
+            return next;
+          });
+        }}
+        onToggle={() => setDistrictOpen((prev) => !prev)}
+        onSelect={selectDistrict}
+        onClear={() => {
+          setForm((prev) => {
+            const next = { ...prev, district: "" };
+            onDraftChangeAction?.(next);
+            return next;
+          });
+          setDistrictQuery("");
+        }}
+      />
+      <MultiSelectField
+        label="Amenities"
+        placeholder="Type and choose amenities"
+        query={amenityQuery}
+        selectedValues={form.amenities}
+        isOpen={amenitiesOpen}
+        options={filteredAmenities}
+        onQueryChange={(value) => {
+          setAmenityQuery(value);
+          if (value.trim().length > 0) {
+            setAmenitiesOpen(true);
+          }
+        }}
+        onToggle={() => setAmenitiesOpen((prev) => !prev)}
+        onSelect={addAmenity}
+        onRemove={removeAmenity}
+      />
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
         Project Images
         <input
@@ -541,6 +690,169 @@ function ImageMetaRow({ image, onDelete, onSave }: ImageMetaRowProps) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type SingleSelectFieldProps = {
+  label: string;
+  placeholder: string;
+  query: string;
+  selectedValue: string;
+  isOpen: boolean;
+  options: readonly string[];
+  onQueryChange: (value: string) => void;
+  onToggle: () => void;
+  onSelect: (value: string) => void;
+  onClear: () => void;
+};
+
+function SingleSelectField({
+  label,
+  placeholder,
+  query,
+  selectedValue,
+  isOpen,
+  options,
+  onQueryChange,
+  onToggle,
+  onSelect,
+  onClear,
+}: SingleSelectFieldProps) {
+  return (
+    <div className="relative flex flex-col gap-2 text-sm font-medium text-neutral-600">
+      <span>{label}</span>
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700"
+        >
+          Select
+        </button>
+      </div>
+      {selectedValue ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onClear}
+            className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+          >
+            {selectedValue} ×
+          </button>
+        </div>
+      ) : null}
+      {isOpen ? (
+        <div className="z-10 w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+          <div className="max-h-44 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onSelect(option)}
+                    className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+                  >
+                    {option}
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-neutral-500">No matching results</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type MultiSelectFieldProps = {
+  label: string;
+  placeholder: string;
+  query: string;
+  selectedValues: string[];
+  isOpen: boolean;
+  options: readonly string[];
+  onQueryChange: (value: string) => void;
+  onToggle: () => void;
+  onSelect: (value: string) => void;
+  onRemove: (value: string) => void;
+};
+
+function MultiSelectField({
+  label,
+  placeholder,
+  query,
+  selectedValues,
+  isOpen,
+  options,
+  onQueryChange,
+  onToggle,
+  onSelect,
+  onRemove,
+}: MultiSelectFieldProps) {
+  return (
+    <div className="relative flex flex-col gap-2 text-sm font-medium text-neutral-600">
+      <span>{label}</span>
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700"
+        >
+          Select
+        </button>
+      </div>
+      {selectedValues.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {selectedValues.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onRemove(value)}
+              className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+            >
+              {value} ×
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {isOpen ? (
+        <div className="z-10 w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+          <div className="max-h-44 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onSelect(option)}
+                    className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+                  >
+                    {option}
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-neutral-500">No matching results</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

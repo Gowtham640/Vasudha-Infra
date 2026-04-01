@@ -31,6 +31,9 @@ type ProjectPayload = {
   address: string | null;
   landmark: string | null;
   map_embed_url: string | null;
+  city: string | null;
+  district: string | null;
+  amenities: string[];
   /** Step 2 output: ordered storage paths from staging upload (PUT /api/admin/project-images). */
   image_paths?: string[];
   /** Which staged path is the cover; must match an entry in `image_paths` when set. */
@@ -43,20 +46,6 @@ type ProjectInsertResponse = {
 /** Server-side — visible in the terminal running Next.js (stdout/stderr). */
 const logProjects = (method: string, step: string, detail?: Record<string, unknown>) => {
   console.log(`[api/admin/projects ${method}] ${step}`, detail !== undefined ? JSON.stringify(detail) : "");
-};
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const isStorageNotFoundError = (error: unknown) => {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-  const candidate = error as { status?: number; statusCode?: string; message?: string };
-  return (
-    candidate.status === 404 ||
-    candidate.statusCode === "404" ||
-    (typeof candidate.message === "string" && candidate.message.toLowerCase().includes("object not found"))
-  );
 };
 
 const sourceObjectCandidates = (oldPath: string) => {
@@ -125,6 +114,9 @@ export async function PATCH(request: Request) {
     address: payload.address,
     landmark: payload.landmark,
     map_embed_url: payload.map_embed_url,
+    city: payload.city,
+    district: payload.district,
+    amenities: payload.amenities ?? [],
   };
 
   if (!payload.id) {
@@ -159,6 +151,9 @@ export async function POST(request: Request) {
     address: payload.address,
     landmark: payload.landmark,
     map_embed_url: payload.map_embed_url,
+    city: payload.city,
+    district: payload.district,
+    amenities: payload.amenities ?? [],
   };
 
   logProjects("POST", "substep: inserting into public.projects", { slug: payload.slug });

@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 
@@ -51,17 +50,6 @@ if (role !== "admin" && role !== "owner") {
   return (
     <div className="min-h-screen bg-neutral-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
-        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-6 py-4 shadow-sm">
-          <div>
-            <p className="text-xs uppercase tracking-[0.5em] text-neutral-500">Admin Control</p>
-            <h1 className="text-xl font-semibold text-neutral-900">Vasudha Panel</h1>
-          </div>
-          <div className="flex gap-4 text-sm text-neutral-500">
-            <Link href="/admin/projects">Projects</Link>
-            <Link href="/admin/sections">Sections</Link>
-            <Link href="/admin/analytics">Analytics</Link>
-          </div>
-        </div>
         <div>{children}</div>
       </div>
     </div>

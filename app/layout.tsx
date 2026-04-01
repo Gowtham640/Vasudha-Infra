@@ -9,9 +9,17 @@ import type { Metadata } from "next";
 import { Inter, Sora, Open_Sans, Atkinson_Hyperlegible_Next, Playfair_Display, Montserrat, DM_Sans } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Vasudha || Amaravati Real Estate",
+  title: "Vasudha Infra Housing",
   description:
     "Premium plots, layouts, and homes developed by Vasudha in Amaravati.",
+  icons: {
+    icon: [
+      { url: "/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/web-app-manifest-192x192.png",
+    apple: "/web-app-manifest-192x192.png",
+  },
 };
 
 // These pages use Supabase SSR which relies on `cookies()`.
@@ -46,7 +54,7 @@ export default async function RootLayout({
           <PageShell>{children}</PageShell>
           <Footer />
           {/* Reserves space above the fixed mobile tab bar so footer/content are not covered */}
-          <div className={`${MOBILE_BOTTOM_NAV_SPACER_CLASS} shrink-0 lg:hidden`} aria-hidden />
+          <div className={`${MOBILE_BOTTOM_NAV_SPACER_CLASS} shrink-0 md:hidden`} aria-hidden />
           <MobileBottomBar />
           <FloatingActions />
         </I18nProvider>

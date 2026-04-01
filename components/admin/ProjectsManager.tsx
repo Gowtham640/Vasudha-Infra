@@ -10,7 +10,18 @@ type ProjectImageRow = Database["public"]["Tables"]["project_images"]["Row"];
 
 type ProjectEditorProject = Pick<
   ProjectRow,
-  "id" | "name" | "slug" | "description" | "status" | "price" | "address" | "landmark" | "map_embed_url"
+  | "id"
+  | "name"
+  | "slug"
+  | "description"
+  | "status"
+  | "price"
+  | "address"
+  | "landmark"
+  | "map_embed_url"
+  | "city"
+  | "district"
+  | "amenities"
 >;
 
 type ProjectImageForEditor = Pick<
@@ -33,6 +44,9 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
     address: "",
     landmark: "",
     map_embed_url: "",
+    city: "",
+    district: "",
+    amenities: [] as string[],
   };
   const [editor, setEditor] = useState<null | {
     isNew: boolean;
@@ -61,6 +75,9 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
         address: newProjectDraft.address || null,
         landmark: newProjectDraft.landmark || null,
         map_embed_url: normalizeMapEmbedUrlInput(newProjectDraft.map_embed_url) || null,
+        city: newProjectDraft.city || null,
+        district: newProjectDraft.district || null,
+        amenities: newProjectDraft.amenities,
       },
       images: [],
     });
@@ -90,7 +107,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
             <button
               type="button"
               onClick={openAdd}
-              className="rounded-full border border-[var(--brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--brand-primary)]"
+              className="rounded-full border border-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-primary)"
             >
               Add project
             </button>
