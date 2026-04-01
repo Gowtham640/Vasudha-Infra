@@ -13,8 +13,8 @@ export function ContactSection({ content }: { content: ContactSectionContent }) 
         <h3 className="text-xs font-semibold text-neutral-900">{content.title}</h3>
         <p className="text-neutral-600">{content.description}</p>
         <div className="flex flex-col gap-2 text-sm text-neutral-500">
-          <Link href="tel:+919999999999" className="text-neutral-700 hover:text-[var(--brand-primary)]">
-            +91 99999 99999
+          <Link href="tel:+917416264646" className="text-neutral-700 hover:text-[var(--brand-primary)]">
+          +91 7416 264 646
           </Link>
           <Link href="mailto:hello@vasudha.com" className="text-neutral-700 hover:text-[var(--brand-primary)]">
             hello@vasudha.com

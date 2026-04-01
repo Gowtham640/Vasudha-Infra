@@ -26,7 +26,7 @@ export function FloatingActions() {
       </a>
       <a
         className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-900 shadow-lg shadow-neutral-300 transition-colors duration-200 hover:border-(--brand-primary)"
-        href="tel:+919999999999"
+        href="tel:+917416264646"
         aria-label={t("common.call_now")}
         style={{ animation: "airFloat 4.4s ease-in-out infinite 0.45s" }}
       >
