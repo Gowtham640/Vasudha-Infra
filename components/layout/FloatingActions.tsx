@@ -6,7 +6,7 @@ import { useI18n } from "../i18n/I18nProvider";
 export function FloatingActions() {
   const { t } = useI18n();
   return (
-    <div className="pointer-events-none fixed z-100 right-6 top-[75vh] flex flex-col gap-3">
+    <div className="pointer-events-none fixed z-100 right-6 top-[70vh] flex flex-col gap-3">
       <a
         className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_20px_45px_rgba(37,211,102,0.35)] transition-opacity duration-200 hover:opacity-90"
         href="https://wa.me/919999999999"
