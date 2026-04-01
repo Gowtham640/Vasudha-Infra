@@ -7,11 +7,15 @@ import { useResponsiveGalleryViewMode } from "../../lib/useResponsiveGalleryView
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, LayoutGrid, Layers, MapPin, SlidersHorizontal, X } from "lucide-react";
 import { useI18n } from "../i18n/I18nProvider";
+import { AP_TG_CITIES, AP_TG_DISTRICTS, OPEN_PLOT_AMENITIES } from "../../lib/projectMetadata";
 
 export type ProjectsListItem = {
   id: string;
   name: string;
   address?: string | null;
+  city?: string | null;
+  district?: string | null;
+  amenities?: string[] | null;
   price?: number | null;
   status?: string | null;
   imageUrl?: string | null;
@@ -20,19 +24,61 @@ export type ProjectsListItem = {
 export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] }) {
   const { t } = useI18n();
   const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [cityQuery, setCityQuery] = useState("");
+  const [districtQuery, setDistrictQuery] = useState("");
+  const [amenityQuery, setAmenityQuery] = useState("");
+  const [cityOpen, setCityOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
   const [view, setView] = useResponsiveGalleryViewMode();
   const [current, setCurrent] = useState(0);
   const isDraggingRef = useRef(false);
 
-  const locations = useMemo(() => {
-    return Array.from(new Set(projects.map((project) => project.address?.split(",")[0]?.trim()).filter(Boolean))) as string[];
+  const cityOptions = useMemo(() => {
+    const fromProjects = projects.map((project) => project.city).filter(Boolean) as string[];
+    return Array.from(new Set([...AP_TG_CITIES, ...fromProjects]));
+  }, [projects]);
+  const districtOptions = useMemo(() => {
+    const fromProjects = projects.map((project) => project.district).filter(Boolean) as string[];
+    return Array.from(new Set([...AP_TG_DISTRICTS, ...fromProjects]));
+  }, [projects]);
+  const amenityOptions = useMemo(() => {
+    const fromProjects = projects.flatMap((project) => project.amenities ?? []);
+    return Array.from(new Set([...OPEN_PLOT_AMENITIES, ...fromProjects]));
   }, [projects]);
 
+  const filteredCities = cityOptions.filter((city) => city.toLowerCase().includes(cityQuery.trim().toLowerCase()));
+  const filteredDistricts = districtOptions.filter((district) =>
+    district.toLowerCase().includes(districtQuery.trim().toLowerCase())
+  );
+  const filteredAmenities = amenityOptions.filter(
+    (amenity) =>
+      amenity.toLowerCase().includes(amenityQuery.trim().toLowerCase()) &&
+      !selectedAmenities.some((selectedAmenity) => selectedAmenity.toLowerCase() === amenity.toLowerCase())
+  );
+
   const filtered = useMemo(() => {
-    if (!selectedLocation) return projects;
-    return projects.filter((project) => (project.address ?? "").toLowerCase().includes(selectedLocation.toLowerCase()));
-  }, [projects, selectedLocation]);
+    return projects.filter((project) => {
+      const cityMatch = selectedCity
+        ? (project.city ?? "").toLowerCase() === selectedCity.toLowerCase()
+        : true;
+      const districtMatch = selectedDistrict
+        ? (project.district ?? "").toLowerCase() === selectedDistrict.toLowerCase()
+        : true;
+      const amenitiesMatch =
+        selectedAmenities.length > 0
+          ? selectedAmenities.every((amenity) =>
+              (project.amenities ?? []).some(
+                (projectAmenity) => projectAmenity.toLowerCase() === amenity.toLowerCase()
+              )
+            )
+          : true;
+      return cityMatch && districtMatch && amenitiesMatch;
+    });
+  }, [projects, selectedAmenities, selectedCity, selectedDistrict]);
 
   const handleNext = () => {
     if (current < filtered.length - 1) setCurrent(current + 1);
@@ -132,10 +178,10 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
                           <h3 className="font-heading text-lg font-bold text-neutral-900">{project.name}</h3>
                           <div className="flex items-center gap-1 mt-1">
                             <MapPin className="w-3.5 h-3.5 text-neutral-700" />
-                            <span className="text-sm text-neutral-700">{project.address ?? "Amaravati"}</span>
+                            <span className="text-sm text-neutral-700">{project.address ?? t("common.amaravati")}</span>
                           </div>
                           <p className="font-heading text-amber-700 font-bold mt-2">
-                            {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
+                            {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
                           </p>
                         </div>
                       </Link>
@@ -155,7 +201,7 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
             </div>
             {current === 0 ? (
               <motion.div className="flex items-center justify-center gap-1 mt-3 text-neutral-500 text-sm" animate={{ x: [0, 10, 0] }} transition={{ repeat: 3, duration: 1 }}>
-                <span>Swipe</span>
+                <span>{t("projects.swipe")}</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.div>
             ) : null}
@@ -180,10 +226,10 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
                     <h3 className="font-heading font-semibold text-sm md:text-base text-neutral-900 truncate">{project.name}</h3>
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin className="w-3 h-3 text-neutral-500 shrink-0" />
-                      <span className="text-xs text-neutral-500 truncate">{project.address ?? "Amaravati"}</span>
+                      <span className="text-xs text-neutral-500 truncate">{project.address ?? t("common.amaravati")}</span>
                     </div>
                     <p className="font-heading text-xs md:text-sm font-bold text-amber-700 mt-2">
-                      {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
+                      {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
                     </p>
                     <button className="mt-3 w-full py-2 rounded-lg bg-green-700/10 text-green-800 text-xs font-semibold hover:bg-green-700 hover:text-white transition-colors">
                       {t("projects.view_details")}
@@ -213,26 +259,92 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
-              <p className="font-heading font-medium text-sm text-neutral-900 mb-3">Location</p>
-              <div className="flex flex-wrap gap-2">
-                {locations.map((location) => (
-                  <button
-                    key={location}
-                    onClick={() => setSelectedLocation(selectedLocation === location ? null : location)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      selectedLocation === location ? "bg-green-700 text-white" : "bg-neutral-100 text-neutral-700"
-                    }`}
-                  >
-                    {location}
-                  </button>
-                ))}
+              <div className="space-y-4">
+                <FilterSingleSelect
+                  label="City"
+                  query={cityQuery}
+                  selectedValue={selectedCity}
+                  isOpen={cityOpen}
+                  options={filteredCities}
+                  onQueryChange={(value) => {
+                    setCityQuery(value);
+                    if (value.trim().length > 0) {
+                      setCityOpen(true);
+                    }
+                  }}
+                  onToggle={() => setCityOpen((prev) => !prev)}
+                  onSelect={(value) => {
+                    setSelectedCity(value);
+                    setCityQuery(value);
+                    setCityOpen(false);
+                  }}
+                  onClear={() => {
+                    setSelectedCity(null);
+                    setCityQuery("");
+                  }}
+                />
+                <FilterSingleSelect
+                  label="District"
+                  query={districtQuery}
+                  selectedValue={selectedDistrict}
+                  isOpen={districtOpen}
+                  options={filteredDistricts}
+                  onQueryChange={(value) => {
+                    setDistrictQuery(value);
+                    if (value.trim().length > 0) {
+                      setDistrictOpen(true);
+                    }
+                  }}
+                  onToggle={() => setDistrictOpen((prev) => !prev)}
+                  onSelect={(value) => {
+                    setSelectedDistrict(value);
+                    setDistrictQuery(value);
+                    setDistrictOpen(false);
+                  }}
+                  onClear={() => {
+                    setSelectedDistrict(null);
+                    setDistrictQuery("");
+                  }}
+                />
+                <FilterMultiSelect
+                  label="Amenities"
+                  query={amenityQuery}
+                  selectedValues={selectedAmenities}
+                  isOpen={amenitiesOpen}
+                  options={filteredAmenities}
+                  onQueryChange={(value) => {
+                    setAmenityQuery(value);
+                    if (value.trim().length > 0) {
+                      setAmenitiesOpen(true);
+                    }
+                  }}
+                  onToggle={() => setAmenitiesOpen((prev) => !prev)}
+                  onSelect={(value) => {
+                    setSelectedAmenities((prev) => [...prev, value]);
+                    setAmenityQuery("");
+                  }}
+                  onRemove={(value) => {
+                    setSelectedAmenities((prev) => prev.filter((item) => item !== value));
+                  }}
+                />
               </div>
               <div className="flex gap-3 mt-8">
-                <button onClick={() => { setSelectedLocation(null); setFilterOpen(false); }} className="flex-1 py-3 rounded-xl border border-neutral-300 text-neutral-900 font-medium">
-                  Clear
+                <button
+                  onClick={() => {
+                    setSelectedCity(null);
+                    setSelectedDistrict(null);
+                    setSelectedAmenities([]);
+                    setCityQuery("");
+                    setDistrictQuery("");
+                    setAmenityQuery("");
+                    setFilterOpen(false);
+                  }}
+                  className="flex-1 py-3 rounded-xl border border-neutral-300 text-neutral-900 font-medium"
+                >
+                  {t("common.clear")}
                 </button>
                 <button onClick={() => setFilterOpen(false)} className="flex-1 py-3 rounded-xl bg-green-700 text-white font-medium">
-                  Apply
+                  {t("common.apply")}
                 </button>
               </div>
             </motion.div>
@@ -240,5 +352,162 @@ export function ProjectsGridClient({ projects }: { projects: ProjectsListItem[] 
         ) : null}
       </AnimatePresence>
     </section>
+  );
+}
+
+type FilterSingleSelectProps = {
+  label: string;
+  query: string;
+  selectedValue: string | null;
+  isOpen: boolean;
+  options: string[];
+  onQueryChange: (value: string) => void;
+  onToggle: () => void;
+  onSelect: (value: string) => void;
+  onClear: () => void;
+};
+
+function FilterSingleSelect({
+  label,
+  query,
+  selectedValue,
+  isOpen,
+  options,
+  onQueryChange,
+  onToggle,
+  onSelect,
+  onClear,
+}: FilterSingleSelectProps) {
+  return (
+    <div className="relative space-y-2">
+      <p className="font-heading font-medium text-sm text-neutral-900">{label}</p>
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder={`Type ${label.toLowerCase()}`}
+          className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-700"
+        >
+          Select
+        </button>
+      </div>
+      {selectedValue ? (
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+        >
+          {selectedValue} ×
+        </button>
+      ) : null}
+      {isOpen ? (
+        <div className="w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+          <div className="max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onSelect(option)}
+                    className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+                  >
+                    {option}
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-neutral-500">No matching results</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type FilterMultiSelectProps = {
+  label: string;
+  query: string;
+  selectedValues: string[];
+  isOpen: boolean;
+  options: string[];
+  onQueryChange: (value: string) => void;
+  onToggle: () => void;
+  onSelect: (value: string) => void;
+  onRemove: (value: string) => void;
+};
+
+function FilterMultiSelect({
+  label,
+  query,
+  selectedValues,
+  isOpen,
+  options,
+  onQueryChange,
+  onToggle,
+  onSelect,
+  onRemove,
+}: FilterMultiSelectProps) {
+  return (
+    <div className="relative space-y-2">
+      <p className="font-heading font-medium text-sm text-neutral-900">{label}</p>
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder={`Type ${label.toLowerCase()}`}
+          className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-700"
+        >
+          Select
+        </button>
+      </div>
+      {selectedValues.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {selectedValues.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onRemove(value)}
+              className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+            >
+              {value} ×
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {isOpen ? (
+        <div className="w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+          <div className="max-h-32 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onSelect(option)}
+                    className="rounded-full bg-neutral-200 px-3 py-1 text-xs text-neutral-800"
+                  >
+                    {option}
+                  </button>
+                ))
+              ) : (
+                <span className="text-xs text-neutral-500">No matching results</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

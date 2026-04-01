@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState } from "react";
+import { useI18n } from "../i18n/I18nProvider";
 
 type LeadFormProps = {
   projectId?: string;
@@ -8,6 +9,7 @@ type LeadFormProps = {
 };
 
 export function LeadForm({ projectId, compact = false }: LeadFormProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [form, setForm] = useState({
     name: "",
@@ -48,7 +50,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     >
       <div className={`grid gap-3 ${compact ? "grid-cols-1" : "md:grid-cols-2"}`}>
         <label className="flex flex-col gap-2 text-sm font-semibold text-neutral-700">
-          Name
+          {t("lead.name")}
           <input
             required
             value={form.name}
@@ -58,7 +60,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         </label>
         {compact ? null : (
           <label className="flex flex-col gap-2 text-sm font-semibold text-neutral-700">
-            Email
+            {t("lead.email")}
             <input
               type="email"
               required
@@ -70,7 +72,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         )}
       </div>
       <label className="flex flex-col gap-2 text-sm font-semibold text-neutral-700">
-        Phone
+        {t("lead.phone")}
         <input
           required
           value={form.phone}
@@ -80,7 +82,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
       </label>
       {compact ? null : (
         <label className="flex flex-col gap-2 text-sm font-semibold text-neutral-700">
-          Message
+          {t("lead.message")}
           <textarea
             required
             value={form.message}
@@ -90,17 +92,17 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         </label>
       )}
       <p className="text-xs text-neutral-500">
-        {compact ? "We will contact you shortly." : "Our team will reach out within 24 hours."}
+        {compact ? t("lead.compact_note") : t("lead.full_note")}
       </p>
       <button
         type="submit"
         className={`w-full rounded-xl bg-green-700 text-center text-sm font-semibold text-white transition-colors hover:bg-green-800 ${compact ? "py-2.5" : "py-3"}`}
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending..." : compact ? "Get a callback" : "Request a callback"}
+        {status === "submitting" ? t("lead.sending") : compact ? t("lead.get_callback") : t("lead.request_callback")}
       </button>
-      {status === "success" && <p className="text-sm text-green-600">Thank you! We will reach out shortly.</p>}
-      {status === "error" && <p className="text-sm text-red-600">Something went wrong. Please try again.</p>}
+      {status === "success" && <p className="text-sm text-green-600">{t("lead.success")}</p>}
+      {status === "error" && <p className="text-sm text-red-600">{t("lead.error")}</p>}
     </form>
   );
 }

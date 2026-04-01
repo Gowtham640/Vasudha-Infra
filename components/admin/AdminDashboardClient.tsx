@@ -6,17 +6,33 @@ import { BarChart3, Users, FolderOpen, TrendingUp, Copy } from "lucide-react";
 
 type LogItem = { event: string | null; created_at: string };
 type LeadItem = { name: string | null; phone?: string | null; email?: string | null; created_at: string };
+type UserItem = {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin" | "owner" | null;
+  created_at: string | null;
+};
 
 export function AdminDashboardClient({
   logs,
   leads,
   totalProjects,
+  users,
+  isOwner,
 }: {
   logs: LogItem[];
   leads: LeadItem[];
   totalProjects: number;
+  users: UserItem[];
+  isOwner: boolean;
 }) {
   const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [userRows, setUserRows] = useState<UserItem[]>(users);
+  const [roleUpdateState, setRoleUpdateState] = useState<{ type: "idle" | "saving" | "error"; message?: string }>({
+    type: "idle",
+  });
 
   const filteredLeads = useMemo(() => {
     const maxItems = range === "7d" ? 20 : range === "30d" ? 80 : 200;
@@ -24,8 +40,34 @@ export function AdminDashboardClient({
   }, [leads, range]);
 
   const copyLead = async (lead: LeadItem) => {
-    const text = `${lead.name ?? ""} | ${lead.phone ?? ""} | ${lead.email ?? ""} | ${lead.created_at}`;
+  const text = `Name: ${lead.name ?? ""}
+  Phone: ${lead.phone ?? ""}
+  Email: ${lead.email ?? ""}`;
     await navigator.clipboard.writeText(text);
+  };
+
+  const updateUserRole = async (userId: string, role: "admin" | "user") => {
+    setRoleUpdateState({ type: "saving" });
+    const response = await fetch("/api/admin/users/role", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, role }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setRoleUpdateState({
+        type: "error",
+        message: body.error ?? "Failed to update role.",
+      });
+      return;
+    }
+
+    setUserRows((previousRows) =>
+      previousRows.map((row) => (row.id === userId ? { ...row, role } : row))
+    );
+    setEditingUserId(null);
+    setRoleUpdateState({ type: "idle" });
   };
 
   const stats = [
@@ -72,10 +114,10 @@ export function AdminDashboardClient({
           </div>
         </div>
         <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-          <h2 className="font-heading text-lg font-semibold text-neutral-900">Edit Sections</h2>
-          <p className="text-sm text-neutral-500 mt-2">Keep the current editable section flow for homepage and contact blocks.</p>
+          <h2 className="font-heading text-lg font-semibold text-neutral-900">Project Sections</h2>
+          <p className="text-sm text-neutral-500 mt-2">Select home projects and manage project order for the projects page.</p>
           <div className="mt-4">
-            <Link href="/admin/sections" className="inline-flex rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white">Open Sections</Link>
+            <Link href="/admin/sections" className="inline-flex rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white">Manage Project Sections</Link>
           </div>
         </div>
       </section>
@@ -114,6 +156,71 @@ export function AdminDashboardClient({
           </table>
         </div>
       </section>
+
+      {isOwner ? (
+        <section className="bg-white rounded-2xl shadow-card overflow-hidden">
+          <div className="p-4 border-b border-neutral-200">
+            <h2 className="font-heading font-semibold text-neutral-900">Users</h2>
+            <p className="mt-1 text-xs text-neutral-500">Owner-only role management for all user records.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200">
+                  <th className="text-left p-4">Name</th>
+                  <th className="text-left p-4">Email</th>
+                  <th className="text-left p-4">Role</th>
+                  <th className="text-left p-4">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userRows.map((row) => (
+                  <tr key={row.id} className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors duration-200">
+                    <td className="p-4">{row.name}</td>
+                    <td className="p-4">{row.email}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-800">
+                          {row.role ?? "user"}
+                        </span>
+                        {row.role === "owner" ? null : (
+                          <button
+                            onClick={() =>
+                              setEditingUserId((currentEditingId) => (currentEditingId === row.id ? null : row.id))
+                            }
+                            className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs text-neutral-700 transition-all duration-200 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-900"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {editingUserId === row.id ? (
+                          <select
+                            className="rounded-md border border-neutral-300 bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-emerald-300 transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#D4AF37] hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                            value={row.role === "admin" ? "admin" : "user"}
+                            onChange={(event) => {
+                              const nextRole = event.target.value as "admin" | "user";
+                              void updateUserRole(row.id, nextRole);
+                            }}
+                          >
+                            <option value="admin">admin</option>
+                            <option value="user">user</option>
+                          </select>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {roleUpdateState.type === "error" ? (
+            <p className="border-t border-neutral-200 px-4 py-3 text-xs text-red-600">{roleUpdateState.message}</p>
+          ) : null}
+        </section>
+      ) : null}
     </main>
   );
 }

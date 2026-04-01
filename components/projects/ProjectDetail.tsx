@@ -8,6 +8,7 @@ import { useResponsiveGalleryViewMode } from "../../lib/useResponsiveGalleryView
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ArrowLeft, CheckCircle, Navigation, CreditCard, Image as ImageIcon, LayoutGrid, Layers, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useI18n } from "../i18n/I18nProvider";
 
 export type ProjectDetailProps = {
   id: string;
@@ -19,6 +20,7 @@ export type ProjectDetailProps = {
   landmark?: string | null;
   address?: string | null;
   map_embed_url?: string | null;
+  amenities?: string[] | null;
   project_images?: Array<{
     id: string;
     image_path: string;
@@ -28,10 +30,13 @@ export type ProjectDetailProps = {
 };
 
 export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
+  const { t } = useI18n();
   const [layoutView, setLayoutView] = useResponsiveGalleryViewMode();
   const [current, setCurrent] = useState(0);
   const isDraggingRef = useRef(false);
   const coverImage = project.project_images?.find((img) => img.is_cover) ?? project.project_images?.[0];
+  const amenities = (project.amenities ?? []).filter((amenity) => amenity.trim().length > 0);
+  const landmark = project.landmark?.trim() ?? "";
   const images = (project.project_images ?? []).map((img) => ({
     id: img.id,
     url: buildStorageUrl(img.image_path),
@@ -58,10 +63,10 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
             <h1 className="font-hero text-3xl md:text-5xl font-bold text-white">{project.name}</h1>
             <div className="flex items-center gap-2 mt-2">
               <MapPin className="w-4 h-4 text-white/80" />
-              <span className="text-white/80">{project.address ?? "Amaravati"}</span>
+              <span className="text-white/80">{project.address ?? t("common.amaravati")}</span>
             </div>
             <p className="font-heading text-xl font-bold text-amber-300 mt-2">
-              {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
+              {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
             </p>
           </motion.div>
         </div>
@@ -72,18 +77,20 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <p className="text-neutral-700 leading-relaxed">{project.description}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <span className="px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-700 text-sm font-medium">
-              {project.status ?? "Available"}
+              {project.status ?? t("projects.available")}
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-700 text-sm font-medium">
-              {project.landmark ?? "Prime location"}
-            </span>
+            {landmark ? (
+              <span className="px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-700 text-sm font-medium">
+                {landmark}
+              </span>
+            ) : null}
           </div>
         </motion.section>
 
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-green-700" />
-            Layout
+            {t("projects.layout")}
           </h2>
           <div className="flex justify-center gap-2 my-5">
             <button
@@ -93,7 +100,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
               }`}
             >
               <Layers className="w-4 h-4" />
-              Scroll
+              {t("scroll")}
             </button>
             <button
               onClick={() => setLayoutView("list")}
@@ -102,7 +109,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-              List
+              {t("list")}
             </button>
           </div>
           {layoutView === "stack" ? (
@@ -166,40 +173,42 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-700" />
-            Amenities
+            {t("projects.amenities")}
           </h2>
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            {["Clubhouse", "Parks", "Water Lines", "24x7 Security"].map((amenity) => (
-              <div key={amenity} className="flex items-center gap-2 p-3 rounded-xl bg-neutral-100">
-                <div className="w-2 h-2 rounded-full bg-green-700 shrink-0" />
-                <span className="text-sm text-neutral-800">{amenity}</span>
-              </div>
-            ))}
-          </div>
+          {amenities.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              {amenities.map((amenity) => (
+                <div key={amenity} className="flex items-center gap-2 p-3 rounded-xl bg-neutral-100">
+                  <div className="w-2 h-2 rounded-full bg-green-700 shrink-0" />
+                  <span className="text-sm text-neutral-800">{amenity}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
-            <Navigation className="w-5 h-5 text-green-700" />
-            Nearby Landmarks
-          </h2>
-          <div className="space-y-2 mt-4">
-            {[project.landmark ?? "Expressway", "Hospitals", "Schools"].map((nearby) => (
-              <div key={nearby} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-100">
+        {landmark ? (
+          <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-green-700" />
+              {t("projects.nearby_landmarks")}
+            </h2>
+            <div className="space-y-2 mt-4">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-100">
                 <MapPin className="w-4 h-4 text-amber-700 shrink-0" />
-                <span className="text-sm text-neutral-800">{nearby}</span>
+                <span className="text-sm text-neutral-800">{landmark}</span>
               </div>
-            ))}
-          </div>
-        </motion.section>
+            </div>
+          </motion.section>
+        ) : null}
 
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-green-700" />
-            Payment Plans
+            {t("projects.payment_plans")}
           </h2>
           <div className="space-y-2 mt-4">
-            {["40% on booking", "30% on foundation", "30% on possession"].map((plan, i) => (
+            {[t("projects.payment_plan_1"), t("projects.payment_plan_2"), t("projects.payment_plan_3")].map((plan, i) => (
               <div key={plan} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-300">
                 <span className="w-7 h-7 rounded-full bg-green-700/10 text-green-700 text-xs font-bold flex items-center justify-center shrink-0">
                   {i + 1}
@@ -214,7 +223,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-green-700" />
-              Location
+              {t("common.location")}
             </h2>
             <div className="mt-4 rounded-2xl overflow-hidden border border-neutral-300">
               <iframe
@@ -224,14 +233,14 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Project Location"
+                title={t("projects.project_location")}
               />
             </div>
           </motion.section>
         ) : null}
 
         <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-neutral-100 rounded-2xl p-6">
-          <h2 className="font-heading font-bold text-xl text-neutral-900 text-center">Interested in this project?</h2>
+          <h2 className="font-heading font-bold text-xl text-neutral-900 text-center">{t("common.interested_project")}</h2>
           <div className="mt-6">
             <LeadForm projectId={project.id} />
           </div>
@@ -239,10 +248,10 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
 
         <div className="flex gap-3">
           <a href="tel:+919999999999" className="flex-1 py-3 rounded-xl bg-green-700 text-white font-heading font-semibold text-center">
-            Call Now
+            {t("common.call_now")}
           </a>
           <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-green-600 text-white font-heading font-semibold text-center flex items-center justify-center gap-2">
-            WhatsApp
+            {t("common.whatsapp")}
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>

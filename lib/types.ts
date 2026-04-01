@@ -41,6 +41,9 @@ export type Database = {
           address: string | null;
           landmark: string | null;
           map_embed_url: string | null;
+          city: string | null;
+          district: string | null;
+          amenities: string[];
           created_at: string | null;
         };
         Insert: {
@@ -53,6 +56,9 @@ export type Database = {
           address?: string | null;
           landmark?: string | null;
           map_embed_url?: string | null;
+          city?: string | null;
+          district?: string | null;
+          amenities?: string[];
         };
         Update: Partial<{
           name: string;
@@ -63,6 +69,9 @@ export type Database = {
           address: string | null;
           landmark: string | null;
           map_embed_url: string | null;
+          city: string | null;
+          district: string | null;
+          amenities: string[];
         }>;
         Relationships: [];
       };
@@ -146,16 +155,22 @@ export type Database = {
         Row: {
           id: string;
           section_id: string | null;
-          content: Json;
+          order: number | null;
+          project: string | null;
+          content?: Json;
         };
         Insert: {
           section_id?: string | null;
-          content: Json;
-        };
-        Update: {
-          section_id?: string | null;
+          order?: number | null;
+          project?: string | null;
           content?: Json;
         };
+        Update: Partial<{
+          section_id?: string | null;
+          order: number | null;
+          project: string | null;
+          content: Json;
+        }>;
         Relationships: [];
       };
       leads: {

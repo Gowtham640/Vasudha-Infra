@@ -3,11 +3,16 @@ import { HomeHero } from "../components/home/HomeHero";
 import { WhyChooseUs } from "../components/home/WhyChooseUs";
 import { FeaturedProjects } from "../components/home/FeaturedProjects";
 import { createServerComponentSupabaseClient } from "../lib/supabase/server";
-import { getProjects, getSectionContent } from "../lib/supabase/helpers";
+import {
+  getProjectIdsForSection,
+  getProjects,
+  getSectionContent,
+} from "../lib/supabase/helpers";
 import { SectionKey } from "../lib/types";
 import { parseSectionContent } from "../lib/schemas/sectionContent";
 import { buildStorageUrl } from "../lib/supabase/storage";
 import { LeadForm } from "../components/contact/LeadForm";
+import { HomeContactInfo } from "../components/home/HomeContactInfo";
 
 const defaultHero = {
   title: "Symbol of Growth and Trust",
@@ -48,6 +53,11 @@ export default async function HomePage() {
   const whySection = await getSectionContent(supabase, "home_why_us");
   const leadSection = await getSectionContent(supabase, "home_lead_banner");
   const projects = await getProjects(supabase);
+  const homeProjectIds = await getProjectIdsForSection(
+    supabase,
+    "home",
+    "home_projects"
+  );
   const projectImageRows = await supabase
     .from("project_images")
     .select("project_id,image_path,is_cover,order_index")
@@ -62,13 +72,18 @@ export default async function HomePage() {
     imageMap.set(row.project_id, buildStorageUrl(row.image_path));
   }
 
+  const projectById = new Map(projects.map((project) => [project.id, project]));
+  const homeProjects = homeProjectIds
+    .map((projectId) => projectById.get(projectId))
+    .filter((project): project is (typeof projects)[number] => Boolean(project));
+
   return (
     <main className="flex flex-col gap-20 ">
       <HomeHero content={heroContent} />
       <div className="px-2">
       <WhyChooseUs content={whyContent} />
       <FeaturedProjects
-        projects={projects.map((project) => ({
+        projects={homeProjects.map((project) => ({
           id: project.id,
           name: project.name,
           address: project.address,
@@ -86,15 +101,7 @@ export default async function HomePage() {
               <LeadForm compact />
             </div>
           </div>
-          <div className="text-white py-1 md:py-3">
-            <h3 className="font-heading text-xl md:text-2xl">Contact Us</h3>
-            <p className="mt-2 text-white/90 text-sm md:text-base">Call or message us to discuss available plots, layouts, and visits.</p>
-            <div className="mt-4 space-y-2 text-sm md:text-base">
-              <a href="tel:+919999999999" className="block underline-offset-2 hover:underline">+91 99999 99999</a>
-              <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="block underline-offset-2 hover:underline">WhatsApp: +91 99999 99999</a>
-              <a href="mailto:hello@vasudhaproperties.com" className="block underline-offset-2 hover:underline">hello@vasudhaproperties.com</a>
-            </div>
-          </div>
+          <HomeContactInfo />
         </div>
       </section>
     </main>

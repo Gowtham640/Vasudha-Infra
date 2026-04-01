@@ -131,6 +131,72 @@ export async function getProjectById(
   return data;
 }
 
+export async function getSectionByPageAndType(
+  supabase: SupabaseDatabaseClient,
+  pageSlug: string,
+  sectionType: string
+) {
+  const pageResponse = await supabase
+    .from("pages")
+    .select("id")
+    .eq("slug", pageSlug)
+    .maybeSingle();
+
+  if (pageResponse.error) {
+    console.error("getSectionByPageAndType.page", pageResponse.error);
+    return null;
+  }
+
+  const pageId = pageResponse.data?.id;
+  if (!pageId) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("sections")
+    .select("id")
+    .eq("page_id", pageId)
+    .eq("type", sectionType)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getSectionByPageAndType.section", error);
+    return null;
+  }
+
+  const section = data as { id?: string } | null;
+  if (!section?.id) {
+    return null;
+  }
+
+  return { id: section.id };
+}
+
+export async function getProjectIdsForSection(
+  supabase: SupabaseDatabaseClient,
+  pageSlug: string,
+  sectionType: string
+) {
+  const section = await getSectionByPageAndType(supabase, pageSlug, sectionType);
+  if (!section?.id) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("section_content")
+    .select("project, order")
+    .eq("section_id", section.id)
+    .order("order", { ascending: true });
+
+  if (error) {
+    console.error("getProjectIdsForSection", error);
+    return [];
+  }
+
+  const rows = (data ?? []) as Array<{ project: string | null }>;
+  return rows.map((row) => row.project).filter((id): id is string => Boolean(id));
+}
+
 export async function getProjectImages(
   supabase: SupabaseDatabaseClient,
   projectId: string

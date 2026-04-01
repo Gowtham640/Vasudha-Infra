@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { Globe, LogIn, LogOut, Shield } from "lucide-react";
 import { isAdminNavActive, isMainNavActive, MAIN_NAV_ITEMS } from "./nav";
@@ -15,12 +15,18 @@ export function Navbar() {
   const pathname = usePathname();
   const [role, setRole] = useState<"owner" | "admin" | "user" | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadRole = async () => {
+    const loadAuthState = async () => {
       try {
+        const sessionResponse = await supabase.auth.getSession();
+        if (!cancelled) {
+          setIsLoggedIn(Boolean(sessionResponse.data.session));
+        }
+
         const res = await fetch("/api/auth/role", { method: "GET" });
         if (!res.ok) {
           return;
@@ -29,20 +35,25 @@ export function Navbar() {
         const data = (await res.json()) as { role?: "owner" | "admin" | "user" | null };
         if (cancelled) return;
         setRole(data.role ?? null);
-        setIsLoggedIn(Boolean(data.role));
       } catch {
         // If role cannot be fetched, we hide the admin link by default.
       }
     };
 
-    loadRole();
+    loadAuthState();
+    const authSubscription = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelled) {
+        setIsLoggedIn(Boolean(session));
+      }
+    });
+
     return () => {
       cancelled = true;
+      authSubscription.data.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const canAccessAdmin = role === "owner" || role === "admin";
-  const supabase = createBrowserSupabaseClient();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -54,7 +65,7 @@ export function Navbar() {
       <div className="container mx-auto flex max-w-6xl flex-row items-center justify-between px-5 md:px-6 h-16">
         {/* Brand: visible on all breakpoints */}
         <div className="flex items-center gap-3">
-          <Image src="/vasudha1.svg" alt="Vasudha Logo" width={120} height={10} />
+          <Image src="/vasudha1.svg" alt="Vasudha Logo" className="absolute  mix-blend-multiply pointer-events-none" width={120} height={10} />
         </div>
 
         {/* Large screens: text links + current route highlight (green pill) */}
@@ -97,19 +108,12 @@ export function Navbar() {
           <button
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm font-medium hover:bg-secondary transition-colors"
             onClick={() => setLang(lang === "en" ? "te" : "en")}
-            aria-label="Toggle language"
+            aria-label={lang === "en" ? "Switch to Telugu" : "Switch to English"}
           >
             <Globe className="w-4 h-4" />
             {lang === "en" ? "తెలుగు" : "English"}
           </button>
 
-          <Link
-            href="/login"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            <LogIn className="w-4 h-4" />
-            {t("nav.login")}
-          </Link>
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -118,7 +122,15 @@ export function Navbar() {
               <LogOut className="w-4 h-4" />
               {t("nav.logout")}
             </button>
-          ) : null}
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <LogIn className="w-4 h-4" />
+              {t("nav.login")}
+            </Link>
+          )}
         </div>
       </div>
     </header>
