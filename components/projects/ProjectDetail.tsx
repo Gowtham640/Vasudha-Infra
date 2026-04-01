@@ -250,7 +250,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           <a href="tel:+917416264646" className="flex-1 py-3 rounded-xl bg-green-700 text-white font-heading font-semibold text-center">
             {t("common.call_now")}
           </a>
-          <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-green-600 text-white font-heading font-semibold text-center flex items-center justify-center gap-2">
+          <a href="https://wa.me/917416264646" target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-green-600 text-white font-heading font-semibold text-center flex items-center justify-center gap-2">
             {t("common.whatsapp")}
             <ArrowRight className="w-4 h-4" />
           </a>

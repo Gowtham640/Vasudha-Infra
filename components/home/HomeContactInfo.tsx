@@ -13,7 +13,7 @@ export function HomeContactInfo() {
         <a href="tel:+917416264646" className="block underline-offset-2 hover:underline">
         +91 7416 264 646
         </a>
-        <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="block underline-offset-2 hover:underline">
+        <a href="https://wa.me/917416264646" target="_blank" rel="noopener noreferrer" className="block underline-offset-2 hover:underline">
           {t("home.whatsapp_label")} +91 7416 264 646
         </a>
         <a href="mailto:hello@vasudhaproperties.com" className="block underline-offset-2 hover:underline">
