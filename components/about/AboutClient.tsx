@@ -66,7 +66,7 @@ export function AboutClient({ headline, body, stats }: AboutClientProps) {
           <h3 className="font-hero text-3xl text-white">{t("common.contact_us")}</h3>
           <p className="text-white/85 mt-3">{t("about.contact_prompt")}</p>
           <div className="mt-6 space-y-2 text-white">
-            <a href="tel:+919999999999" className="block hover:text-amber-300">+91 7416 264 646</a>
+            <a href="tel:+917416264646" className="block hover:text-amber-300">+91 7416 264 646</a>
             <a href="mailto:hello@vasudha.com" className="block hover:text-amber-300">hello@vasudha.com</a>
           </div>
         </div>
