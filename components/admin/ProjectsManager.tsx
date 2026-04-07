@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { Database } from "../../lib/types";
 import { ProjectEditor } from "./ProjectEditor";
 import { normalizeMapEmbedUrlInput } from "../../lib/mapEmbedUrl";
@@ -12,10 +13,10 @@ type ProjectEditorProject = Pick<
   ProjectRow,
   | "id"
   | "name"
-  | "slug"
   | "description"
   | "status"
   | "price"
+  | "size_sq_yd"
   | "address"
   | "landmark"
   | "map_embed_url"
@@ -37,10 +38,10 @@ type ProjectWithImages = ProjectEditorProject & {
 export function ProjectsManager({ projects }: { projects: ProjectWithImages[] }) {
   const emptyNewProjectDraft = {
     name: "",
-    slug: "",
     description: "",
     status: "available",
     price: "",
+    size_sq_yd: "",
     address: "",
     landmark: "",
     map_embed_url: "",
@@ -68,10 +69,10 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
       project: {
         id: "",
         name: newProjectDraft.name,
-        slug: newProjectDraft.slug,
         description: newProjectDraft.description || null,
         status: newProjectDraft.status || "available",
         price: newProjectDraft.price ? Number(newProjectDraft.price) : null,
+        size_sq_yd: newProjectDraft.size_sq_yd ? Number(newProjectDraft.size_sq_yd) : null,
         address: newProjectDraft.address || null,
         landmark: newProjectDraft.landmark || null,
         map_embed_url: normalizeMapEmbedUrlInput(newProjectDraft.map_embed_url) || null,
@@ -92,6 +93,23 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
     });
   };
   const closeEditor = () => setEditor(null);
+  const deleteProject = async (id: string) => {
+    if (!confirm("Delete this project? This will also delete linked images.")) {
+      return;
+    }
+
+    const response = await fetch("/api/admin/projects", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    window.location.reload();
+  };
   const discardNewProjectDraft = () => {
     setNewProjectDraft(emptyNewProjectDraft);
     setEditor(null);
@@ -107,9 +125,10 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
             <button
               type="button"
               onClick={openAdd}
-              className="rounded-full border border-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-primary)"
+              className="rounded-full border border-(--brand-primary) p-2 text-(--brand-primary)"
+              aria-label="Add project"
             >
-              Add project
+              <Plus className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -118,7 +137,7 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-6 py-4"
+              className="glass flex items-center justify-between rounded-2xl border border-white/40 bg-white/25 px-6 py-4 backdrop-blur-xl"
             >
               <div>
                 <p className="text-lg font-semibold text-neutral-900">{project.name}</p>
@@ -128,12 +147,24 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
                 <p className="text-sm text-neutral-600">
                   {project.price ? `₹${project.price.toLocaleString("en-IN")}` : "Price on request"}
                 </p>
+                <p className="text-sm text-neutral-600">
+                  {project.size_sq_yd ? `${project.size_sq_yd} sq yd` : "Size on request"}
+                </p>
                 <button
                   type="button"
-                  className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700"
+                  className="rounded-full border border-neutral-300 p-2 text-neutral-700"
                   onClick={() => openEdit(project)}
+                  aria-label={`Edit ${project.name}`}
                 >
-                  Edit
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-red-300 p-2 text-red-700"
+                  onClick={() => void deleteProject(project.id)}
+                  aria-label={`Delete ${project.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -142,17 +173,17 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
       </div>
 
       {editor && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-neutral-900/40 pt-10">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-neutral-900/40 pt-20">
           <div className="w-full max-w-2xl px-4">
-          <div className="flex h-[85vh] flex-col overflow-hidden rounded-2xl bg-white">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3">
+          <div className="glass flex h-[85vh] flex-col overflow-hidden rounded-2xl border border-white/40">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/40 bg-white/40 px-4 py-3 backdrop-blur-xl">
               <p className="text-sm font-semibold text-neutral-700">
                 {editor.isNew ? "Create project" : "Edit project"}
               </p>
               <button
                 type="button"
                 onClick={closeEditor}
-                className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700"
+                  className="rounded-full border border-white/50 bg-white/25 px-4 py-2 text-sm font-semibold text-neutral-800 backdrop-blur-xl"
               >
                 Close
               </button>
@@ -184,11 +215,11 @@ export function ProjectsManager({ projects }: { projects: ProjectWithImages[] })
             />
             </div>
             {editor.isNew && (
-              <div className="flex items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3">
+              <div className="flex items-center justify-end gap-2 border-t border-white/40 bg-white/40 px-4 py-3 backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={discardNewProjectDraft}
-                  className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50"
+                  className="rounded-full border border-white/50 bg-white/25 px-3 py-1.5 text-xs font-medium text-neutral-700 backdrop-blur-xl hover:bg-white/40"
                 >
                   Discard
                 </button>

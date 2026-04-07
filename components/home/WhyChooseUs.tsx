@@ -43,7 +43,7 @@ export function WhyChooseUs({ content }: { content: WhyChooseUsContent }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card rounded-2xl p-5 shadow-card text-center"
+                className="glass rounded-2xl border border-white/40 bg-white/35 p-5 text-center shadow-card backdrop-blur-xl"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Icon className="w-6 h-6 text-yellow-500" />

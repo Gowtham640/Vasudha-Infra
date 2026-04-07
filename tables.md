@@ -14,19 +14,16 @@ constraint users_id_fkey foreign KEY (id) references auth.users (id)
 create table public.projects (
 id uuid not null default gen_random_uuid (),
 name text not null,
-slug text not null,
 description text null,
 price numeric null,
+size_sq_yd numeric null,
 status text null default 'available',
 address text null,
 landmark text null,
 map_embed_url text null,
 created_at timestamp without time zone null default now(),
-constraint projects_pkey primary key (id),
-constraint projects_slug_key unique (slug)
+constraint projects_pkey primary key (id)
 );
-
-create index IF not exists projects_slug_idx on public.projects using btree (slug);
 
 -- PROJECT IMAGES
 create table public.project_images (

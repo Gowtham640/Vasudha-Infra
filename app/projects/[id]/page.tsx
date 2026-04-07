@@ -30,7 +30,7 @@ export default async function ProjectDetailPage({ params }: Props) {
   const images = await getProjectImages(supabase, id);
 
   return (
-    <main className="pt-10 space-y-24">
+    <main className="space-y-24">
       {/* pt-10 -> controls distance from navbar/top */}
       {/* space-y-24 -> controls spacing between sections (global layout control) */}
       <ProjectDetail

@@ -16,6 +16,7 @@ export type ProjectDetailProps = {
   description?: string | null;
   location?: string | null;
   price?: number | null;
+  size_sq_yd?: number | null;
   status?: string | null;
   landmark?: string | null;
   address?: string | null;
@@ -68,6 +69,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
             <p className="font-heading text-xl font-bold text-amber-300 mt-2">
               {project.price ? `₹${project.price.toLocaleString("en-IN")}` : t("common.price_on_request")}
             </p>
+            {project.size_sq_yd ? <p className="mt-1 text-sm text-white/85">{project.size_sq_yd} sq yd</p> : null}
           </motion.div>
         </div>
       </div>
@@ -202,22 +204,7 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           </motion.section>
         ) : null}
 
-        <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className="font-heading font-bold text-xl text-neutral-900 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-green-700" />
-            {t("projects.payment_plans")}
-          </h2>
-          <div className="space-y-2 mt-4">
-            {[t("projects.payment_plan_1"), t("projects.payment_plan_2"), t("projects.payment_plan_3")].map((plan, i) => (
-              <div key={plan} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-300">
-                <span className="w-7 h-7 rounded-full bg-green-700/10 text-green-700 text-xs font-bold flex items-center justify-center shrink-0">
-                  {i + 1}
-                </span>
-                <span className="text-sm text-neutral-800">{plan}</span>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+        
 
         {project.map_embed_url ? (
           <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -239,22 +226,13 @@ export function ProjectDetail({ project }: { project: ProjectDetailProps }) {
           </motion.section>
         ) : null}
 
-        <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-neutral-100 rounded-2xl p-6">
+        <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="glass rounded-2xl border border-white/40 bg-white/30 p-6 backdrop-blur-xl">
           <h2 className="font-heading font-bold text-xl text-neutral-900 text-center">{t("common.interested_project")}</h2>
           <div className="mt-6">
             <LeadForm projectId={project.id} />
           </div>
         </motion.section>
 
-        <div className="flex gap-3">
-          <a href="tel:+917416264646" className="flex-1 py-3 rounded-xl bg-green-700 text-white font-heading font-semibold text-center">
-            {t("common.call_now")}
-          </a>
-          <a href="https://wa.me/917416264646" target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-green-600 text-white font-heading font-semibold text-center flex items-center justify-center gap-2">
-            {t("common.whatsapp")}
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
       </div>
     </div>
   );

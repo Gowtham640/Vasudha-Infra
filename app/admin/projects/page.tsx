@@ -13,10 +13,10 @@ type ProjectEditorProject = Pick<
   ProjectRow,
   | "id"
   | "name"
-  | "slug"
   | "description"
   | "status"
   | "price"
+  | "size_sq_yd"
   | "address"
   | "landmark"
   | "map_embed_url"
@@ -31,7 +31,7 @@ export default async function AdminProjectsPage() {
   const supabase = createServerComponentSupabaseClient();
   const projectsResponse = await supabase
     .from("projects")
-    .select("id, name, slug, description, status, price, address, landmark, map_embed_url, city, district, amenities")
+    .select("id, name, description, status, price, size_sq_yd, address, landmark, map_embed_url, city, district, amenities")
     .order("created_at", { ascending: false });
   const projects = (projectsResponse.data ?? []) as ProjectEditorProject[];
 

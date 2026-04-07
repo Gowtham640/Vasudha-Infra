@@ -61,18 +61,16 @@ export function AboutClient({ headline, body, stats }: AboutClientProps) {
         </motion.div>
       </div>
 
-      <section className="grid gap-8 md:grid-cols-2 bg-green-700 rounded-t-2xl p-6 md:p-8">
+      <section className="glass grid gap-8 rounded-2xl border border-white/40 bg-white/20 p-6 backdrop-blur-xl md:grid-cols-2 md:p-8">
         <div>
-          <h3 className="font-hero text-3xl text-white">{t("common.contact_us")}</h3>
-          <p className="text-white/85 mt-3">{t("about.contact_prompt")}</p>
-          <div className="mt-6 space-y-2 text-white">
-            <a href="tel:+917416264646" className="block hover:text-amber-300">+91 7416 264 646</a>
-            <a href="mailto:hello@vasudha.com" className="block hover:text-amber-300">hello@vasudha.com</a>
+          <h3 className="font-hero text-3xl text-neutral-900">{t("common.contact_us")}</h3>
+          <p className="mt-3 text-neutral-700">{t("about.contact_prompt")}</p>
+          <div className="mt-6 space-y-2 text-neutral-900">
+            <a href="tel:+917416264646" className="block hover:text-green-800">+91 7416 264 646</a>
+            <a href="mailto:hello@vasudha.com" className="block hover:text-green-800">hello@vasudha.com</a>
           </div>
         </div>
-        <div className="rounded-t-2xl bg-white p-4 md:p-6">
-          <LeadForm />
-        </div>
+        <LeadForm />
       </section>
     </main>
   );

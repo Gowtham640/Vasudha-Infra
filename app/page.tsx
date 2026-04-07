@@ -93,15 +93,17 @@ export default async function HomePage() {
       />
       </div>
       <section className="relative overflow-hidden bg-green-700 py-10 px-4">
-        <img src="/vasudha1white.svg" alt="Vasudha background logo" className="absolute opacity-10 inset-0 h-full w-full object-cover invert-brightness-0 pointer-events-none" />
-        <div className="container relative grid grid-cols-2 gap-4 md:gap-8 items-start">
-          <div className="rounded-xl bg-white/90 p-2 md:p-5">
-            <h2 className="font-hero text-xl md:text-2xl text-neutral-900">{leadContent.title}</h2>
-            <div className="mt-3">
-              <LeadForm compact />
+        <img src="/vasudha1white.svg" alt="Vasudha background logo" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10 invert-brightness-0" />
+        <div className="container relative">
+          <div className="glass grid grid-cols-2 items-start gap-4 rounded-3xl border border-white/40 bg-white/20 p-3 backdrop-blur-xl md:gap-8 md:p-6">
+            <div>
+              <h2 className="font-hero text-xl text-neutral-900 md:text-2xl">{leadContent.title}</h2>
+              <div className="mt-3">
+                <LeadForm compact />
+              </div>
             </div>
+            <HomeContactInfo />
           </div>
-          <HomeContactInfo />
         </div>
       </section>
     </main>

@@ -24,10 +24,10 @@ const uniquePathsInOrder = (paths: string[]): string[] => {
 type ProjectPayload = {
   id?: string;
   name: string;
-  slug: string;
   description: string | null;
   status: string | null;
   price: number | null;
+  size_sq_yd: number | null;
   address: string | null;
   landmark: string | null;
   map_embed_url: string | null;
@@ -107,10 +107,10 @@ export async function PATCH(request: Request) {
 
   const updateData: Database["public"]["Tables"]["projects"]["Update"] = {
     name: payload.name,
-    slug: payload.slug,
     description: payload.description,
     status: payload.status,
     price: payload.price,
+    size_sq_yd: payload.size_sq_yd,
     address: payload.address,
     landmark: payload.landmark,
     map_embed_url: payload.map_embed_url,
@@ -144,10 +144,10 @@ export async function POST(request: Request) {
 
   const insertData: Database["public"]["Tables"]["projects"]["Insert"] = {
     name: payload.name,
-    slug: payload.slug,
     description: payload.description,
     status: payload.status,
     price: payload.price,
+    size_sq_yd: payload.size_sq_yd,
     address: payload.address,
     landmark: payload.landmark,
     map_embed_url: payload.map_embed_url,
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
     amenities: payload.amenities ?? [],
   };
 
-  logProjects("POST", "substep: inserting into public.projects", { slug: payload.slug });
+  logProjects("POST", "substep: inserting into public.projects", { name: payload.name });
 
   const { data, error } = await supabase
     .from("projects")
