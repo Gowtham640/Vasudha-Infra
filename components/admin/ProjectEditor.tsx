@@ -434,7 +434,7 @@ export function ProjectEditor({
           type="number"
           value={form.size_sq_yd}
           onChange={handleChange("size_sq_yd")}
-          className="rounded-xl border border-neutral-300 bg-white/80 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2 outline-none focus:border-white"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -555,7 +555,7 @@ export function ProjectEditor({
             setSelectedFiles(next);
             setCoverFileIndex(0);
           }}
-          className="rounded-xl border border-neutral-200 px-3 py-2"
+          className="rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2"
           disabled={!projectId && !isNew}
         />
       </label>
@@ -700,12 +700,12 @@ function SingleSelectField({
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="w-full rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2 outline-none focus:border-white"
         />
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700"
+          className="rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2 text-xs text-neutral-700"
         >
           Select
         </button>
@@ -722,7 +722,7 @@ function SingleSelectField({
         </div>
       ) : null}
       {isOpen ? (
-        <div className="z-10 w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+        <div className="z-10 w-full rounded-xl border-2 border-white/70 bg-white p-3 shadow-lg">
           <div className="max-h-44 overflow-y-auto">
             <div className="flex flex-wrap gap-2">
               {options.length > 0 ? (
@@ -780,12 +780,12 @@ function MultiSelectField({
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="w-full rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2 outline-none focus:border-white"
         />
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700"
+          className="rounded-xl border-2 border-white/70 bg-white/80 px-3 py-2 text-xs text-neutral-700"
         >
           Select
         </button>
@@ -805,7 +805,7 @@ function MultiSelectField({
         </div>
       ) : null}
       {isOpen ? (
-        <div className="z-10 w-full rounded-xl border border-neutral-300 bg-white p-3 shadow-lg">
+        <div className="z-10 w-full rounded-xl border-2 border-white/70 bg-white p-3 shadow-lg">
           <div className="max-h-44 overflow-y-auto">
             <div className="flex flex-wrap gap-2">
               {options.length > 0 ? (
