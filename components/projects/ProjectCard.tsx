@@ -6,7 +6,6 @@ import { useI18n } from "../i18n/I18nProvider";
 export type ProjectSummary = {
   id: string;
   name: string;
-  slug: string;
   location?: string | null;
   price?: number | null;
   status?: string | null;

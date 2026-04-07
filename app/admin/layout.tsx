@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
+import { AdminSectionNav } from "../../components/admin/AdminSectionNav";
 
 export const metadata: Metadata = {
   title: "Vasudha Admin",
@@ -50,6 +51,7 @@ if (role !== "admin" && role !== "owner") {
   return (
     <div className="min-h-screen bg-neutral-100">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
+        <AdminSectionNav />
         <div>{children}</div>
       </div>
     </div>

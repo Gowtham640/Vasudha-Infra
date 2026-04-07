@@ -20,10 +20,10 @@ export default async function AdminProjectDetailPage({ params }: Props) {
         project={{
           id: "",
           name: "",
-          slug: "",
           description: "",
           status: "available",
           price: null,
+          size_sq_yd: null,
           address: "",
           landmark: "",
           map_embed_url: "",
@@ -38,7 +38,7 @@ export default async function AdminProjectDetailPage({ params }: Props) {
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, slug, description, status, price, address, landmark, map_embed_url, city, district, amenities")
+    .select("id, name, description, status, price, size_sq_yd, address, landmark, map_embed_url, city, district, amenities")
     .eq("id", params.id)
     .maybeSingle();
 

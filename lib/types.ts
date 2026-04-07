@@ -34,9 +34,9 @@ export type Database = {
         Row: {
           id: string;
           name: string;
-          slug: string;
           description: string | null;
           price: number | null;
+          size_sq_yd: number | null;
           status: string | null;
           address: string | null;
           landmark: string | null;
@@ -49,9 +49,9 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
-          slug: string;
           description?: string | null;
           price?: number | null;
+          size_sq_yd?: number | null;
           status?: string | null;
           address?: string | null;
           landmark?: string | null;
@@ -62,9 +62,9 @@ export type Database = {
         };
         Update: Partial<{
           name: string;
-          slug: string;
           description: string | null;
           price: number | null;
+          size_sq_yd: number | null;
           status: string | null;
           address: string | null;
           landmark: string | null;

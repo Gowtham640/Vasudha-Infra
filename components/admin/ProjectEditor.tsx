@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Trash2 } from "lucide-react";
 import { buildStorageUrl } from "../../lib/supabase/storage";
 import { normalizeMapEmbedUrlInput } from "../../lib/mapEmbedUrl";
 import { AP_TG_CITIES, AP_TG_DISTRICTS, OPEN_PLOT_AMENITIES } from "../../lib/projectMetadata";
@@ -18,10 +19,10 @@ type ProjectEditorProps = {
   stayOnList?: boolean;
   onDraftChangeAction?: (draft: {
     name: string;
-    slug: string;
     description: string;
     status: string;
     price: string;
+    size_sq_yd: string;
     address: string;
     landmark: string;
     map_embed_url: string;
@@ -42,9 +43,9 @@ type ProjectEditorProps = {
   project: {
     id: string;
     name: string;
-    slug: string;
     status?: string | null;
     price?: number | null;
+    size_sq_yd?: number | null;
     description?: string | null;
     address?: string | null;
     landmark?: string | null;
@@ -76,10 +77,10 @@ export function ProjectEditor({
   const router = useRouter();
   const [form, setForm] = useState({
     name: project.name,
-    slug: project.slug,
     description: project.description ?? "",
     status: project.status ?? "available",
     price: project.price?.toString() ?? "",
+    size_sq_yd: project.size_sq_yd?.toString() ?? "",
     address: project.address ?? "",
     landmark: project.landmark ?? "",
     map_embed_url: normalizeMapEmbedUrlInput(project.map_embed_url ?? ""),
@@ -115,10 +116,10 @@ export function ProjectEditor({
     const payload: Record<string, unknown> = {
       id: projectId,
       name: form.name,
-      slug: form.slug,
       description: form.description || null,
       status: form.status || null,
       price: form.price ? Number(form.price) : null,
+      size_sq_yd: form.size_sq_yd ? Number(form.size_sq_yd) : null,
       address: form.address || null,
       landmark: form.landmark || null,
       map_embed_url: normalizeMapEmbedUrlInput(form.map_embed_url) || null,
@@ -310,19 +311,21 @@ export function ProjectEditor({
     setMessage("Image deleted.");
   };
 
-  const handleImageMetaSave = async (
-    imageId: string,
-    payload: { alt_text: string | null; order_index: number; is_cover: boolean }
-  ) => {
+  const handleCoverImageUpdate = async (imageId: string) => {
+    const currentImage = images.find((image) => image.id === imageId);
+    if (!currentImage) {
+      return;
+    }
+
     const response = await fetch("/api/admin/project-images", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: imageId,
         projectId,
-        alt_text: payload.alt_text,
-        order_index: payload.order_index,
-        is_cover: payload.is_cover,
+        alt_text: currentImage.alt_text,
+        order_index: currentImage.order_index ?? 0,
+        is_cover: true,
       }),
     });
 
@@ -332,14 +335,9 @@ export function ProjectEditor({
     }
 
     setImages((prev) =>
-      prev.map((image) => {
-        if (payload.is_cover) {
-          return { ...image, is_cover: image.id === imageId };
-        }
-        return image.id === imageId ? { ...image, ...payload } : image;
-      })
+      prev.map((image) => ({ ...image, is_cover: image.id === imageId }))
     );
-    setMessage("Image metadata saved.");
+    setMessage("Cover image updated.");
   };
 
   const filteredCities = AP_TG_CITIES.filter((city) =>
@@ -401,7 +399,7 @@ export function ProjectEditor({
     <form
       id={formId}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-lg"
+      className="glass flex flex-col gap-4 rounded-2xl border border-white/40 bg-white/35 p-6 text-neutral-900 shadow-lg backdrop-blur-xl"
     >
       <h3 className="text-lg font-semibold text-neutral-900">{isNew ? "Add project" : "Edit project"}</h3>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -409,16 +407,7 @@ export function ProjectEditor({
         <input
           value={form.name}
           onChange={handleChange("name")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
-          required
-        />
-      </label>
-      <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
-        Slug
-        <input
-          value={form.slug}
-          onChange={handleChange("slug")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
           required
         />
       </label>
@@ -427,7 +416,7 @@ export function ProjectEditor({
         <input
           value={form.status}
           onChange={handleChange("status")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -436,7 +425,16 @@ export function ProjectEditor({
           type="number"
           value={form.price}
           onChange={handleChange("price")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
+        />
+      </label>
+      <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
+        Size (sq yd)
+        <input
+          type="number"
+          value={form.size_sq_yd}
+          onChange={handleChange("size_sq_yd")}
+          className="rounded-xl border border-neutral-300 bg-white/80 px-3 py-2 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -444,7 +442,7 @@ export function ProjectEditor({
         <textarea
           value={form.description}
           onChange={handleChange("description")}
-          className="min-h-28 rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="min-h-28 rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -452,7 +450,7 @@ export function ProjectEditor({
         <input
           value={form.address}
           onChange={handleChange("address")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -460,7 +458,7 @@ export function ProjectEditor({
         <input
           value={form.landmark}
           onChange={handleChange("landmark")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium text-neutral-600">
@@ -468,7 +466,7 @@ export function ProjectEditor({
         <input
           value={form.map_embed_url}
           onChange={handleChange("map_embed_url")}
-          className="rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-(--brand-primary)"
+          className="rounded-xl border border-white/50 bg-white/80 px-3 py-2 text-neutral-900 outline-none focus:border-(--brand-primary)"
         />
       </label>
       <SingleSelectField
@@ -562,7 +560,7 @@ export function ProjectEditor({
         />
       </label>
       {isNew && selectedFiles.length > 0 && (
-        <div className="rounded-xl border border-neutral-200 p-4">
+        <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
           <p className="text-sm font-semibold text-neutral-900">Cover image</p>
           <p className="text-xs text-neutral-500">First file is the default cover; pick another if needed.</p>
           <ul className="mt-2 flex flex-col gap-2 text-sm text-neutral-700">
@@ -581,7 +579,7 @@ export function ProjectEditor({
         </div>
       )}
       {images.length > 0 && (
-        <div className="rounded-xl border border-neutral-200 p-4">
+        <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
           <p className="text-sm font-semibold text-neutral-900">Current Images</p>
           <div className="mt-3 flex flex-col gap-3">
             {images.map((image) => (
@@ -589,7 +587,7 @@ export function ProjectEditor({
                 key={image.id}
                 image={image}
                 onDelete={handleDeleteImage}
-                onSave={handleImageMetaSave}
+                onSetCover={handleCoverImageUpdate}
               />
             ))}
           </div>
@@ -629,21 +627,17 @@ type ImageMetaRowProps = {
     is_cover: boolean | null;
   };
   onDelete: (id: string) => Promise<void>;
-  onSave: (id: string, payload: { alt_text: string | null; order_index: number; is_cover: boolean }) => Promise<void>;
+  onSetCover: (id: string) => Promise<void>;
 };
 
-function ImageMetaRow({ image, onDelete, onSave }: ImageMetaRowProps) {
-  const [altText, setAltText] = useState(image.alt_text ?? "");
-  const [orderIndex, setOrderIndex] = useState(String(image.order_index ?? 0));
-  const [isCover, setIsCover] = useState(Boolean(image.is_cover));
-
+function ImageMetaRow({ image, onDelete, onSetCover }: ImageMetaRowProps) {
   return (
     <div className="rounded-lg border border-neutral-200 p-3">
       <div className="mb-3 h-40 overflow-hidden rounded-lg border border-neutral-200">
         {/* Issue 1: Use unoptimized so the Supabase public URL loads without the optimizer blocking unknown hosts. */}
         <Image
           src={buildStorageUrl(image.image_path)}
-          alt={altText || "Project image"}
+          alt={image.alt_text || "Project image"}
           width={640}
           height={400}
           unoptimized
@@ -651,42 +645,21 @@ function ImageMetaRow({ image, onDelete, onSave }: ImageMetaRowProps) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <input
-          value={altText}
-          onChange={(event) => setAltText(event.target.value)}
-          placeholder="Alt text"
-          className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          value={orderIndex}
-          onChange={(event) => setOrderIndex(event.target.value)}
-          className="rounded-lg border border-neutral-200 px-3 py-2 text-sm"
-        />
-        <label className="flex items-center gap-2 text-sm text-neutral-700">
-          <input type="checkbox" checked={isCover} onChange={(event) => setIsCover(event.target.checked)} />
-          Set as cover image
-        </label>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() =>
-              onSave(image.id, {
-                alt_text: altText || null,
-                order_index: Number(orderIndex) || 0,
-                is_cover: isCover,
-              })
-            }
+            onClick={() => void onSetCover(image.id)}
             className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold text-neutral-700"
           >
-            Save metadata
+            {image.is_cover ? "Cover image" : "Set as cover"}
           </button>
           <button
             type="button"
-            onClick={() => onDelete(image.id)}
+            onClick={() => void onDelete(image.id)}
             className="rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-700"
+            aria-label="Delete image"
           >
-            Delete image
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

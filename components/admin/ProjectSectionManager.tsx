@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { GripVertical, Trash2 } from "lucide-react";
 
 type ProjectItem = {
   id: string;
@@ -15,14 +16,13 @@ type Props = {
 
 const dedupeIds = (ids: string[]) => Array.from(new Set(ids));
 
-const moveByOffset = (items: string[], index: number, offset: number) => {
-  const nextIndex = index + offset;
-  if (nextIndex < 0 || nextIndex >= items.length) {
+const moveByDrag = (items: string[], fromIndex: number, toIndex: number) => {
+  if (fromIndex === toIndex || toIndex < 0 || toIndex >= items.length) {
     return items;
   }
   const copy = [...items];
-  const [item] = copy.splice(index, 1);
-  copy.splice(nextIndex, 0, item);
+  const [item] = copy.splice(fromIndex, 1);
+  copy.splice(toIndex, 0, item);
   return copy;
 };
 
@@ -37,6 +37,8 @@ export function ProjectSectionManager({
   const [homeSelection, setHomeSelection] = useState(dedupeIds(initialHomeSelection));
   const [status, setStatus] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [draggedProjectsIndex, setDraggedProjectsIndex] = useState<number | null>(null);
+  const [draggedHomeIndex, setDraggedHomeIndex] = useState<number | null>(null);
 
   const projectById = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
@@ -90,7 +92,7 @@ export function ProjectSectionManager({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
         <h2 className="text-xl font-semibold text-neutral-900">
           Projects Page Order
         </h2>
@@ -102,35 +104,24 @@ export function ProjectSectionManager({
           {orderedProjectsPage.map((project, index) => (
             <div
               key={project.id}
+              draggable
+              onDragStart={() => setDraggedProjectsIndex(index)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (draggedProjectsIndex === null) return;
+                setProjectsPageOrder((prev) => moveByDrag(prev, draggedProjectsIndex, index));
+                setDraggedProjectsIndex(null);
+              }}
               className="flex items-center justify-between rounded-xl border border-neutral-200 px-4 py-3"
             >
               <p className="font-medium text-neutral-900">{project.name}</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setProjectsPageOrder((prev) => moveByOffset(prev, index, -1))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs"
-                >
-                  Up
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setProjectsPageOrder((prev) => moveByOffset(prev, index, 1))
-                  }
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs"
-                >
-                  Down
-                </button>
-              </div>
+              <GripVertical className="h-4 w-4 text-neutral-500" />
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
         <h2 className="text-xl font-semibold text-neutral-900">
           Home Page Projects
         </h2>
@@ -139,13 +130,13 @@ export function ProjectSectionManager({
         </p>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-neutral-200 p-4">
+          <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
             <h3 className="text-sm font-semibold text-neutral-700">Available Projects</h3>
             <div className="mt-3 space-y-2">
               {homeAvailable.map((project) => (
                 <div
                   key={project.id}
-                  className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-white/40 bg-white/20 px-3 py-2"
                 >
                   <p className="text-sm text-neutral-800">{project.name}</p>
                   <button
@@ -160,41 +151,40 @@ export function ProjectSectionManager({
             </div>
           </div>
 
-          <div className="rounded-xl border border-neutral-200 p-4">
+          <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
             <h3 className="text-sm font-semibold text-neutral-700">Selected for Home</h3>
             <div className="mt-3 space-y-2">
               {homeSelected.map((project, index) => (
                 <div
                   key={project.id}
-                  className="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-white/40 bg-white/20 px-3 py-2"
                 >
                   <p className="text-sm text-neutral-800">{project.name}</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        setHomeSelection((prev) => moveByOffset(prev, index, -1))
-                      }
-                      className="rounded-lg border border-neutral-300 px-2 py-1 text-xs"
+                      onClick={() => {
+                        if (!confirm("Remove this project from home section?")) return;
+                        removeFromHome(project.id);
+                      }}
+                      className="rounded-lg border border-red-300 p-1.5 text-red-700"
+                      aria-label={`Remove ${project.name}`}
                     >
-                      Up
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setHomeSelection((prev) => moveByOffset(prev, index, 1))
-                      }
-                      className="rounded-lg border border-neutral-300 px-2 py-1 text-xs"
+                    <span
+                      draggable
+                      onDragStart={() => setDraggedHomeIndex(index)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => {
+                        if (draggedHomeIndex === null) return;
+                        setHomeSelection((prev) => moveByDrag(prev, draggedHomeIndex, index));
+                        setDraggedHomeIndex(null);
+                      }}
+                      className="rounded-md border border-neutral-300 p-1 text-neutral-500"
                     >
-                      Down
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeFromHome(project.id)}
-                      className="rounded-lg border border-red-300 px-2 py-1 text-xs text-red-700"
-                    >
-                      Remove
-                    </button>
+                      <GripVertical className="h-3.5 w-3.5" />
+                    </span>
                   </div>
                 </div>
               ))}
