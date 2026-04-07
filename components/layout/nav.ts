@@ -15,7 +15,7 @@ export const MAIN_NAV_ITEMS: MainNavItem[] = [
   { href: "/contact", labelKey: "nav.contact" },
 ];
 
-/** True when this top-level route should show the active (green) state */
+/** True when this top-level route should show the active (highlighted) state */
 export function isMainNavActive(pathname: string, href: string): boolean {
   if (href === "/") {
     return pathname === "/";

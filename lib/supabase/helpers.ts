@@ -33,8 +33,8 @@ export async function getSectionContent(
 ) {
   const { data: section, error: sectionError } = await supabase
     .from("sections")
-    .select("id, type, is_visible, order_index, page_id")
-    .eq("type", key)
+    .select("id, name, type, is_visible, order_index, page_id")
+    .eq("name", key)
     .limit(1)
     .maybeSingle();
 

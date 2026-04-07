@@ -111,7 +111,11 @@ export function MobileBottomBar() {
         </div>
       </div>
 
-      <nav className="fixed bottom-3 left-0 right-0 z-50 mx-auto w-3/4 max-w-sm rounded-full glass border border-border/50 pb-[env(safe-area-inset-bottom)]" aria-label="Primary">
+      {/* Neutral bar: gray surface so gold active state reads clearly */}
+      <nav
+        className="fixed bottom-3 left-0 right-0 z-50 mx-auto w-3/4 max-w-sm rounded-full border border-neutral-800 bg-neutral-800/60 pb-[env(safe-area-inset-bottom)] shadow-sm backdrop-blur-xl"
+        aria-label="Primary"
+      >
         <div className="flex items-center justify-around py-2 px-2">
           {MOBILE_NAV_ITEMS.map((item) => {
             const active = isMainNavActive(pathname, item.href);
@@ -125,12 +129,16 @@ export function MobileBottomBar() {
                 {active ? (
                   <motion.div
                     layoutId="mobile-nav-active"
-                    className="absolute inset-0 rounded-full bg-green-700/20"
+                    className="absolute inset-0 rounded-full bg-[rgb(var(--accent)/0.28)]"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 ) : null}
-                <Icon className={`w-5 h-5 relative z-10 ${active ? "text-green-800" : "text-muted-foreground"}`} />
-                <span className={`text-[8px] font-medium relative z-10 ${active ? "text-green-800" : "text-muted-foreground"}`}>
+                <Icon
+                  className={`w-5 h-5 relative z-10 ${active ? "text-[rgb(223,175,63)]" : "text-white"}`}
+                />
+                <span
+                  className={`text-[8px] font-medium relative z-10 ${active ? "text-[rgb(223,175,63)]" : "text-white"}`}
+                >
                   {t(item.labelKey)}
                 </span>
               </Link>
@@ -145,12 +153,16 @@ export function MobileBottomBar() {
               {isAdminNavActive(pathname) ? (
                 <motion.div
                   layoutId="mobile-nav-active"
-                  className="absolute inset-0 rounded-full bg-green-700/20"
+                  className="absolute inset-0 rounded-full bg-[rgb(var(--accent)/0.28]"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               ) : null}
-              <Shield className={`w-5 h-5 relative z-10 ${isAdminNavActive(pathname) ? "text-primary" : "text-muted-foreground"}`} />
-              <span className={`text-[10px] font-medium relative z-10 ${isAdminNavActive(pathname) ? "text-primary" : "text-muted-foreground"}`}>
+              <Shield
+                className={`w-5 h-5 relative z-10 ${isAdminNavActive(pathname) ? "text-[rgb(138_108_36)]" : "text-white"}`}
+              />
+              <span
+                className={`text-[10px] font-medium relative z-10 ${isAdminNavActive(pathname) ? "text-[rgb(138_108_36)]" : "text-white"}`}
+              >
                 {t("nav.admin")}
               </span>
             </Link>

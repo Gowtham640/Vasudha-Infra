@@ -1,24 +1,28 @@
 import { createServerComponentSupabaseClient } from "../../../lib/supabase/server";
 import { ProjectSectionManager } from "../../../components/admin/ProjectSectionManager";
+import { ContentManagementClient } from "../../../components/admin/ContentManagementClient";
 import type { Database } from "../../../lib/types";
+import { buildStorageUrl } from "../../../lib/supabase/storage";
 
 type ProjectRow = Pick<
   Database["public"]["Tables"]["projects"]["Row"],
-  "id" | "name" | "created_at"
+  "id" | "name" | "address" | "price" | "created_at"
 >;
 
 export default async function AdminSectionsPage() {
   const supabase = createServerComponentSupabaseClient();
 
-  const projectsResponse = await supabase
-    .from("projects")
-    .select("id, name, created_at")
-    .order("created_at", { ascending: true });
-
-  const pagesResponse = await supabase
-    .from("pages")
-    .select("id, slug")
-    .in("slug", ["home", "projects"]);
+  const [projectsResponse, pagesResponse, projectImagesResponse] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id, name, address, price, created_at")
+      .order("created_at", { ascending: true }),
+    supabase.from("pages").select("id, slug").in("slug", ["home", "projects"]),
+    supabase
+      .from("project_images")
+      .select("project_id, image_path, order_index")
+      .order("order_index", { ascending: true }),
+  ]);
 
   const projects = (projectsResponse.data ?? []) as ProjectRow[];
   const pages = (pagesResponse.data ?? []) as Array<{ id: string; slug: string }>;
@@ -82,8 +86,36 @@ export default async function AdminSectionsPage() {
     ...defaultOrderIds.filter((id) => !seen.has(id)),
   ];
 
+  const imageMap = new Map<string, string>();
+  for (const row of projectImagesResponse.data ?? []) {
+    if (!row.project_id || imageMap.has(row.project_id)) {
+      continue;
+    }
+    imageMap.set(row.project_id, buildStorageUrl(row.image_path));
+  }
+
+  const projectById = new Map(projects.map((project) => [project.id, project]));
+  const homePreviewProjects = selectedHomeIds
+    .map((projectId) => projectById.get(projectId))
+    .filter((project): project is ProjectRow => Boolean(project))
+    .map((project) => ({
+      id: project.id,
+      name: project.name,
+      address: project.address,
+      price: project.price,
+      imageUrl: imageMap.get(project.id) ?? null,
+    }));
+
   return (
-    <main className="pt-10">
+    <main className="w-full min-w-0 max-w-full space-y-10 overflow-x-hidden pt-10">
+      <header>
+        <h1 className="text-2xl font-semibold text-neutral-900">Project Sections</h1>
+        <p className="mt-1 text-sm text-neutral-600">
+          Site copy, featured projects on the home page, and project listing order.
+        </p>
+      </header>
+
+      <ContentManagementClient homePreviewProjects={homePreviewProjects} />
       <ProjectSectionManager
         projects={projects.map((project) => ({ id: project.id, name: project.name }))}
         initialProjectsPageOrder={projectsPageOrderIds}

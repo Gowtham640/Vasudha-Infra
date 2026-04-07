@@ -15,7 +15,14 @@ export type HomeProject = {
   imageUrl?: string | null;
 };
 
-export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
+export function FeaturedProjects({
+  projects,
+  /** Admin CMS preview: avoid viewport breakpoints so layout fits the mini frame. */
+  preview = false,
+}: {
+  projects: HomeProject[];
+  preview?: boolean;
+}) {
   const { t } = useI18n();
   const [current, setCurrent] = useState(0);
   const featured = useMemo(() => projects, [projects]);
@@ -36,8 +43,8 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
           <h2 className="font-hero text-3xl md:text-4xl font-bold text-neutral-900">{t("featured.title")}</h2>
           <p className="text-neutral-600 mt-2">{t("featured.subtitle")}</p>
         </motion.div>
-        {/* Mobile and tablet: swipe stack cards */}
-        <div className="relative w-full overflow-hidden lg:hidden">
+        {/* Mobile and tablet: swipe stack cards (always in admin preview — viewport lg would wrongly show desktop grid in a narrow frame) */}
+        <div className={preview ? "relative w-full overflow-hidden" : "relative w-full overflow-hidden lg:hidden"}>
             <div className="relative h-[380px] md:h-[440px] flex items-center justify-center">
               <AnimatePresence mode="popLayout">
                 {featured.map((project, index) => {
@@ -47,7 +54,7 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
                   return (
                     <motion.div
                       key={project.id}
-                      className="absolute w-[85%] md:w-[400px] h-[340px] md:h-[400px] cursor-pointer"
+                      className="absolute h-[340px] w-[85%] max-w-[min(400px,100%)] cursor-pointer md:h-[400px]"
                       initial={{ scale: 0.9, x: 300, opacity: 0 }}
                       animate={{
                         scale: isActive ? 1 : 0.9 - Math.abs(offset) * 0.05,
@@ -114,7 +121,13 @@ export function FeaturedProjects({ projects }: { projects: HomeProject[] }) {
           </div>
 
         {/* Desktop and larger: always show horizontal card layout */}
-        <div className="hidden items-center justify-center  lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div
+          className={
+            preview
+              ? "hidden"
+              : "hidden items-center justify-center lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          }
+        >
           {featured.map((project, i) => (
             <motion.div
               key={project.id}
