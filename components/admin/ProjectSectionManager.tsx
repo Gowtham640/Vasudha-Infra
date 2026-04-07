@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GripVertical, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 
 type ProjectItem = {
   id: string;
@@ -26,6 +26,17 @@ const moveByDrag = (items: string[], fromIndex: number, toIndex: number) => {
   return copy;
 };
 
+const moveByOffset = (items: string[], index: number, offset: number) => {
+  const nextIndex = index + offset;
+  if (nextIndex < 0 || nextIndex >= items.length) {
+    return items;
+  }
+  const copy = [...items];
+  const [item] = copy.splice(index, 1);
+  copy.splice(nextIndex, 0, item);
+  return copy;
+};
+
 export function ProjectSectionManager({
   projects,
   initialProjectsPageOrder,
@@ -37,8 +48,6 @@ export function ProjectSectionManager({
   const [homeSelection, setHomeSelection] = useState(dedupeIds(initialHomeSelection));
   const [status, setStatus] = useState<string>("");
   const [saving, setSaving] = useState(false);
-  const [draggedProjectsIndex, setDraggedProjectsIndex] = useState<number | null>(null);
-  const [draggedHomeIndex, setDraggedHomeIndex] = useState<number | null>(null);
 
   const projectById = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
@@ -90,22 +99,6 @@ export function ProjectSectionManager({
     }
   };
 
-  const reorderProjectsPageByTouch = (targetIndex: number) => {
-    if (draggedProjectsIndex === null || draggedProjectsIndex === targetIndex) {
-      return;
-    }
-    setProjectsPageOrder((prev) => moveByDrag(prev, draggedProjectsIndex, targetIndex));
-    setDraggedProjectsIndex(targetIndex);
-  };
-
-  const reorderHomeByTouch = (targetIndex: number) => {
-    if (draggedHomeIndex === null || draggedHomeIndex === targetIndex) {
-      return;
-    }
-    setHomeSelection((prev) => moveByDrag(prev, draggedHomeIndex, targetIndex));
-    setDraggedHomeIndex(targetIndex);
-  };
-
   return (
     <div className="space-y-8">
       <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
@@ -120,15 +113,27 @@ export function ProjectSectionManager({
           {orderedProjectsPage.map((project, index) => (
             <div
               key={project.id}
-              onPointerDown={() => setDraggedProjectsIndex(index)}
-              onPointerEnter={() => reorderProjectsPageByTouch(index)}
-              onPointerUp={() => setDraggedProjectsIndex(null)}
-              onPointerCancel={() => setDraggedProjectsIndex(null)}
               className="flex items-center justify-between rounded-xl border border-neutral-200 px-4 py-3"
-              style={{ touchAction: "none", userSelect: "none" }}
             >
               <p className="font-medium text-neutral-900">{project.name}</p>
-              <GripVertical className="h-4 w-4 text-neutral-500" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setProjectsPageOrder((prev) => moveByOffset(prev, index, -1))}
+                  className="rounded-md border border-neutral-300 p-1 text-neutral-700"
+                  aria-label={`Move ${project.name} up`}
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectsPageOrder((prev) => moveByOffset(prev, index, 1))}
+                  className="rounded-md border border-neutral-300 p-1 text-neutral-700"
+                  aria-label={`Move ${project.name} down`}
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -185,16 +190,22 @@ export function ProjectSectionManager({
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                    <span
-                      onPointerDown={() => setDraggedHomeIndex(index)}
-                      onPointerEnter={() => reorderHomeByTouch(index)}
-                      onPointerUp={() => setDraggedHomeIndex(null)}
-                      onPointerCancel={() => setDraggedHomeIndex(null)}
-                      className="rounded-md border border-neutral-300 p-1 text-neutral-500"
-                      style={{ touchAction: "none", userSelect: "none", cursor: "grab" }}
+                    <button
+                      type="button"
+                      onClick={() => setHomeSelection((prev) => moveByOffset(prev, index, -1))}
+                      className="rounded-md border border-neutral-300 p-1 text-neutral-700"
+                      aria-label={`Move ${project.name} up`}
                     >
-                      <GripVertical className="h-3.5 w-3.5" />
-                    </span>
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHomeSelection((prev) => moveByOffset(prev, index, 1))}
+                      className="rounded-md border border-neutral-300 p-1 text-neutral-700"
+                      aria-label={`Move ${project.name} down`}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
