@@ -90,6 +90,22 @@ export function ProjectSectionManager({
     }
   };
 
+  const reorderProjectsPageByTouch = (targetIndex: number) => {
+    if (draggedProjectsIndex === null || draggedProjectsIndex === targetIndex) {
+      return;
+    }
+    setProjectsPageOrder((prev) => moveByDrag(prev, draggedProjectsIndex, targetIndex));
+    setDraggedProjectsIndex(targetIndex);
+  };
+
+  const reorderHomeByTouch = (targetIndex: number) => {
+    if (draggedHomeIndex === null || draggedHomeIndex === targetIndex) {
+      return;
+    }
+    setHomeSelection((prev) => moveByDrag(prev, draggedHomeIndex, targetIndex));
+    setDraggedHomeIndex(targetIndex);
+  };
+
   return (
     <div className="space-y-8">
       <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
@@ -104,15 +120,12 @@ export function ProjectSectionManager({
           {orderedProjectsPage.map((project, index) => (
             <div
               key={project.id}
-              draggable
-              onDragStart={() => setDraggedProjectsIndex(index)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => {
-                if (draggedProjectsIndex === null) return;
-                setProjectsPageOrder((prev) => moveByDrag(prev, draggedProjectsIndex, index));
-                setDraggedProjectsIndex(null);
-              }}
+              onPointerDown={() => setDraggedProjectsIndex(index)}
+              onPointerEnter={() => reorderProjectsPageByTouch(index)}
+              onPointerUp={() => setDraggedProjectsIndex(null)}
+              onPointerCancel={() => setDraggedProjectsIndex(null)}
               className="flex items-center justify-between rounded-xl border border-neutral-200 px-4 py-3"
+              style={{ touchAction: "none", userSelect: "none" }}
             >
               <p className="font-medium text-neutral-900">{project.name}</p>
               <GripVertical className="h-4 w-4 text-neutral-500" />
@@ -173,15 +186,12 @@ export function ProjectSectionManager({
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                     <span
-                      draggable
-                      onDragStart={() => setDraggedHomeIndex(index)}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => {
-                        if (draggedHomeIndex === null) return;
-                        setHomeSelection((prev) => moveByDrag(prev, draggedHomeIndex, index));
-                        setDraggedHomeIndex(null);
-                      }}
+                      onPointerDown={() => setDraggedHomeIndex(index)}
+                      onPointerEnter={() => reorderHomeByTouch(index)}
+                      onPointerUp={() => setDraggedHomeIndex(null)}
+                      onPointerCancel={() => setDraggedHomeIndex(null)}
                       className="rounded-md border border-neutral-300 p-1 text-neutral-500"
+                      style={{ touchAction: "none", userSelect: "none", cursor: "grab" }}
                     >
                       <GripVertical className="h-3.5 w-3.5" />
                     </span>

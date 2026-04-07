@@ -16,7 +16,7 @@ export function ContactSection({ content }: { content: ContactSectionContent }) 
           <Link href="tel:+917416264646" className="text-neutral-700 hover:text-[var(--brand-primary)]">
           +91 7416 264 646
           </Link>
-          <Link href="mailto:hello@vasudha.com" className="text-neutral-700 hover:text-[var(--brand-primary)]">
+          <Link href="mailto:hello@vasudha.com" className="text-neutral-700 text-[12px] hover:text-[var(--brand-primary)]">
             hello@vasudha.com
           </Link>
         </div>
