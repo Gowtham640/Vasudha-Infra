@@ -2,43 +2,49 @@
 
 import { motion } from "framer-motion";
 import { Shield, MapPin, BadgeDollarSign, CreditCard } from "lucide-react";
-
-export type WhyChooseUsContent = {
-  title: string;
-  subtitle?: string;
-  cards: Array<{
-    title: string;
-    description: string;
-    stat?: string;
-  }>;
-};
+import { SectionProse } from "../cms/SectionProse";
 
 const WHY_ICONS = [Shield, MapPin, BadgeDollarSign, CreditCard] as const;
 
-export function WhyChooseUs({ content }: { content: WhyChooseUsContent }) {
-  const cards = content.cards.slice(0, 4);
+type Four = readonly [unknown, unknown, unknown, unknown];
 
+/**
+ * Intro + four cards: each block is Tiptap JSON from Supabase (`why_us_intro`, `why_us_1`…`why_us_4`).
+ */
+export function WhyChooseUs({
+  introDoc,
+  cardDocs,
+  /** Admin CMS preview: single column so cards fit narrow preview width. */
+  preview = false,
+}: {
+  introDoc: unknown;
+  cardDocs: Four;
+  preview?: boolean;
+}) {
   return (
     <section className="py-16 px-4 bg-secondary/50">
       <div className="container">
-        <motion.h2
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-hero text-3xl md:text-4xl font-bold text-center text-foreground"
+          className="text-center mx-auto max-w-3xl [&_.prose]:mx-auto"
         >
-          {content.title}
-        </motion.h2>
-        {content.subtitle ? (
-          <p className="text-center text-muted-foreground mt-2 max-w-2xl mx-auto">{content.subtitle}</p>
-        ) : null}
+          <SectionProse json={introDoc} className="[&_h2]:font-hero [&_h2]:text-3xl [&_h2]:md:text-4xl [&_h2]:font-bold [&_h2]:text-foreground" />
+        </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-10">
-          {cards.map((card, i) => {
+        <div
+          className={
+            preview
+              ? "mt-6 grid grid-cols-1 gap-3"
+              : "mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6"
+          }
+        >
+          {cardDocs.map((doc, i) => {
             const Icon = WHY_ICONS[i] ?? Shield;
             return (
               <motion.div
-                key={`${card.title}-${i}`}
+                key={`why-card-${i}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -48,12 +54,9 @@ export function WhyChooseUs({ content }: { content: WhyChooseUsContent }) {
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Icon className="w-6 h-6 text-yellow-500" />
                 </div>
-                <h3 className="font-heading font-semibold mt-3 text-foreground text-sm md:text-base">
-                  {card.title}
-                </h3>
-                <p className="text-muted-foreground text-xs md:text-sm mt-2">
-                  {card.description}
-                </p>
+                <div className="mt-3 text-left">
+                  <SectionProse json={doc} variant="compact" />
+                </div>
               </motion.div>
             );
           })}

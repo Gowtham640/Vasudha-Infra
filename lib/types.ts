@@ -129,6 +129,8 @@ export type Database = {
           id: string;
           page_id: string | null;
           type: string;
+          name: string | null;
+          label: string | null;
           data_source_type: string | null;
           order_index: number;
           is_visible: boolean | null;
@@ -138,6 +140,8 @@ export type Database = {
           id?: string;
           page_id?: string | null;
           type: string;
+          name?: string | null;
+          label?: string | null;
           data_source_type?: string | null;
           order_index: number;
           is_visible?: boolean | null;
@@ -145,6 +149,8 @@ export type Database = {
         Update: Partial<{
           page_id: string | null;
           type: string;
+          name: string | null;
+          label: string | null;
           data_source_type: string | null;
           order_index: number;
           is_visible: boolean | null;
@@ -158,18 +164,21 @@ export type Database = {
           order: number | null;
           project: string | null;
           content?: Json;
+          updated_at: string | null;
         };
         Insert: {
           section_id?: string | null;
           order?: number | null;
           project?: string | null;
           content?: Json;
+          updated_at?: string | null;
         };
         Update: Partial<{
           section_id?: string | null;
           order: number | null;
           project: string | null;
           content: Json;
+          updated_at: string | null;
         }>;
         Relationships: [];
       };
@@ -238,13 +247,38 @@ export type Database = {
 
 export type SectionKey =
   | "home_hero"
-  | "home_why_us"
+  | "why_us_intro"
+  | "why_us_1"
+  | "why_us_2"
+  | "why_us_3"
+  | "why_us_4"
   | "home_lead_banner"
   | "home_contact"
   | "projects_list"
-  | "about_overview"
+  | "about_hero"
+  | "about_stats"
+  | "vision"
+  | "mission"
   | "contact_cta";
 
 export type SectionPayload = {
   [key in SectionKey]?: Json;
 };
+
+/** Sections edited in Content Management (Tiptap JSON in `section_content`). */
+export const CMS_CONTENT_SECTION_NAMES = [
+  "home_hero",
+  "why_us_intro",
+  "why_us_1",
+  "why_us_2",
+  "why_us_3",
+  "why_us_4",
+  "home_lead_banner",
+  "about_hero",
+  "about_stats",
+  "vision",
+  "mission",
+  "contact_cta",
+] as const;
+
+export type CmsContentSectionName = (typeof CMS_CONTENT_SECTION_NAMES)[number];

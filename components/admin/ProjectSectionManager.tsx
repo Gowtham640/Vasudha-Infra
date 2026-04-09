@@ -100,8 +100,8 @@ export function ProjectSectionManager({
   };
 
   return (
-    <div className="space-y-8">
-      <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
+    <div className="w-full min-w-0 max-w-full space-y-8 overflow-x-hidden">
+      <section className="glass w-full min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
         <h2 className="text-xl font-semibold text-neutral-900">
           Projects Page Order
         </h2>
@@ -113,9 +113,9 @@ export function ProjectSectionManager({
           {orderedProjectsPage.map((project, index) => (
             <div
               key={project.id}
-              className="flex items-center justify-between rounded-xl border border-neutral-200 px-4 py-3"
+              className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-neutral-200 px-4 py-3"
             >
-              <p className="font-medium text-neutral-900">{project.name}</p>
+              <p className="min-w-0 truncate font-medium text-neutral-900">{project.name}</p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -139,7 +139,7 @@ export function ProjectSectionManager({
         </div>
       </section>
 
-      <section className="glass rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
+      <section className="glass w-full min-w-0 max-w-full overflow-x-hidden rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
         <h2 className="text-xl font-semibold text-neutral-900">
           Home Page Projects
         </h2>
@@ -147,20 +147,20 @@ export function ProjectSectionManager({
           Add selected projects and set the exact display order.
         </p>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
+        <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2">
+          <div className="glass min-w-0 overflow-x-hidden rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
             <h3 className="text-sm font-semibold text-neutral-700">Available Projects</h3>
             <div className="mt-3 space-y-2">
               {homeAvailable.map((project) => (
                 <div
                   key={project.id}
-                  className="flex items-center justify-between rounded-lg border border-white/40 bg-white/20 px-3 py-2"
+                  className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-white/40 bg-white/20 px-3 py-2"
                 >
-                  <p className="text-sm text-neutral-800">{project.name}</p>
+                  <p className="min-w-0 truncate text-sm text-neutral-800">{project.name}</p>
                   <button
                     type="button"
                     onClick={() => addToHome(project.id)}
-                    className="rounded-lg border border-green-700 px-2.5 py-1 text-xs text-green-700"
+                    className="shrink-0 rounded-lg border border-green-700 px-2.5 py-1 text-xs text-green-700"
                   >
                     Add
                   </button>
@@ -169,16 +169,16 @@ export function ProjectSectionManager({
             </div>
           </div>
 
-          <div className="glass rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
+          <div className="glass min-w-0 overflow-x-hidden rounded-xl border border-white/40 bg-white/25 p-4 backdrop-blur-xl">
             <h3 className="text-sm font-semibold text-neutral-700">Selected for Home</h3>
             <div className="mt-3 space-y-2">
               {homeSelected.map((project, index) => (
                 <div
                   key={project.id}
-                  className="flex items-center justify-between rounded-lg border border-white/40 bg-white/20 px-3 py-2"
+                  className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-white/40 bg-white/20 px-3 py-2"
                 >
-                  <p className="text-sm text-neutral-800">{project.name}</p>
-                  <div className="flex gap-2">
+                  <p className="min-w-0 truncate text-sm text-neutral-800">{project.name}</p>
+                  <div className="flex shrink-0 gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -214,16 +214,15 @@ export function ProjectSectionManager({
         </div>
       </section>
 
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={saveChanges}
           disabled={saving}
           className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save project section changes"}
+          {saving ? "Saving..." : "Save changes"}
         </button>
-        {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
       </div>
     </div>
   );

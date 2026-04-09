@@ -18,7 +18,7 @@ export default async function AdminAnalyticsPage() {
   const logs = (logsResponse.data ?? []) as AnalyticsLog[];
 
   return (
-    <main className="pt-10 space-y-24">
+    <main className="space-y-24">
       {/* pt-10 -> controls distance from navbar/top */}
       {/* space-y-24 -> controls spacing between sections (global layout control) */}
       <div className="rounded-2xl border border-neutral-200 bg-white p-6">

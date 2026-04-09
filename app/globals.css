@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: 255 255 255;
@@ -79,6 +80,11 @@ body {
 
 .font-heading {
   font-family: var(--font-heading);
+}
+
+/* Body copy color token (pairs with .font-hero / .font-heading) */
+.font-foreground {
+  color: rgb(var(--foreground));
 }
 
 .glass {

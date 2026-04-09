@@ -1,31 +1,25 @@
-import { parseSectionContent } from "../../lib/schemas/sectionContent";
 import { createServerComponentSupabaseClient } from "../../lib/supabase/server";
 import { getSectionContent } from "../../lib/supabase/helpers";
 import { AboutClient } from "../../components/about/AboutClient";
-
-type SectionStat = {
-  label: string;
-  value: string;
-};
-
-const defaultAbout = {
-  headline: "About Vasudha",
-  body: "An Amaravati-based real estate developer focused on lakeside plots, curated layouts, and premium homes.",
-  stats: [
-    { label: "Plots delivered", value: "120+" },
-    { label: "Trusted families", value: "450+" },
-  ],
-};
+import { emptyCmsDoc } from "../../lib/tiptap/cmsDoc";
 
 export default async function AboutPage() {
   const supabase = createServerComponentSupabaseClient();
-  const section = await getSectionContent(supabase, "about_overview");
-  const parsed = parseSectionContent("about_overview", section?.content ?? defaultAbout);
-  const content = parsed.success.success ? parsed.success.data : defaultAbout;
+  const [aboutHero, vision, mission, stats] = await Promise.all([
+    getSectionContent(supabase, "about_hero"),
+    getSectionContent(supabase, "vision"),
+    getSectionContent(supabase, "mission"),
+    getSectionContent(supabase, "about_stats"),
+  ]);
 
   return (
     <main className="space-y-12">
-      <AboutClient headline={content.headline} body={content.body} stats={content.stats as SectionStat[]} />
+      <AboutClient
+        aboutHeroDoc={aboutHero?.content ?? emptyCmsDoc}
+        visionDoc={vision?.content ?? emptyCmsDoc}
+        missionDoc={mission?.content ?? emptyCmsDoc}
+        statsDoc={stats?.content ?? emptyCmsDoc}
+      />
     </main>
   );
 }

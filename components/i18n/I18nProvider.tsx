@@ -68,7 +68,7 @@ const translations: Record<Language, Record<string, string>> = {
     "projects.payment_plan_2": "30% on foundation",
     "projects.payment_plan_3": "30% on possession",
     "about.vision_body":
-      "We envision transparent, technology-enabled land ownership where every family can confidently invest in growth corridors and future-ready communities.",
+      "We envision trsparent, technology-enabled land ownership where every family can confidently invest in growth corridors and future-ready communities.",
     "about.mission_body":
       "Our mission is to deliver legally verified projects, transparent payments, and dependable support from first enquiry to plot registration.",
     "about.contact_prompt": "Speak with our experts for availability, pricing, and guided visits.",

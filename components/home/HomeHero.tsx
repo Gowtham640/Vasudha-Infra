@@ -5,16 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "../i18n/I18nProvider";
+import { SectionProse } from "../cms/SectionProse";
 
-export type HomeHeroContent = {
-  title: string;
-  subtitle: string;
-  description?: string;
-  ctaLabel: string;
-  ctaHref?: string;
-};
-
-export function HomeHero({ content }: { content: HomeHeroContent }) {
+/**
+ * Hero copy comes from Supabase (`home_hero`) as Tiptap JSON; buttons stay compact with i18n labels.
+ */
+export function HomeHero({ doc }: { doc: unknown }) {
   const router = useRouter();
   const { t } = useI18n();
 
@@ -38,10 +34,10 @@ export function HomeHero({ content }: { content: HomeHeroContent }) {
           transition={{ duration: 0.7 }}
           className="max-w-xl"
         >
-          <h1 className="font-hero text-4xl md:text-6xl font-bold text-white leading-tight">{t("hero.title")}</h1>
-          <p className="mt-4 text-lg text-white/85 max-w-md">{t("hero.subtitle")}</p>
+          <SectionProse json={doc} variant="heroDark" className="max-w-xl" />
           <div className="flex flex-wrap gap-3 mt-8">
             <button
+              type="button"
               onClick={() => router.push("/projects")}
               className="px-6 py-3 rounded-xl gradient-gold font-heading font-semibold text-black shadow-lg flex items-center gap-2"
             >
@@ -49,6 +45,7 @@ export function HomeHero({ content }: { content: HomeHeroContent }) {
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => router.push("/contact")}
               className="px-6 py-3 rounded-xl border-2 border-white/40 text-white font-heading font-semibold backdrop-blur-sm hover:bg-white/10 transition-colors"
             >
@@ -57,7 +54,6 @@ export function HomeHero({ content }: { content: HomeHeroContent }) {
           </div>
         </motion.div>
       </div>
-      <div className="hidden">{content.title}</div>
     </section>
   );
 }
