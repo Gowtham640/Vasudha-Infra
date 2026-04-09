@@ -221,9 +221,8 @@ export function ProjectSectionManager({
           disabled={saving}
           className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save project section changes"}
+          {saving ? "Saving..." : "Save changes"}
         </button>
-        {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
       </div>
     </div>
   );

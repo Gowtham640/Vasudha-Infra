@@ -19,7 +19,7 @@ export async function GET() {
   const supabase = createRouteSupabaseClient();
   const { data: sections, error: sectionsError } = await supabase
     .from("sections")
-    .select("id, name, label")
+    .select("id, name, label, is_visible")
     .in("name", [...CMS_CONTENT_SECTION_NAMES])
     .order("label", { ascending: true });
 
@@ -58,6 +58,7 @@ export async function GET() {
     return {
       name: section.name,
       label: section.label,
+      is_visible: section.is_visible,
       content: row?.content ?? null,
       updated_at: row?.updated_at ?? null,
     };

@@ -15,7 +15,7 @@ export function AdminSectionNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="glass sticky top-16 z-40 flex flex-wrap items-center gap-2 rounded-2xl border border-white/40 bg-white/35 p-3 backdrop-blur-xl">
+    <nav className="glass sticky z-40 flex flex-wrap items-center gap-2 rounded-2xl border border-white/40 bg-white/35 p-3 backdrop-blur-xl">
       {navItems.map((item) => {
         const isActive =
           item.href === "/admin"

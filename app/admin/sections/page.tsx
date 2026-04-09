@@ -107,7 +107,7 @@ export default async function AdminSectionsPage() {
     }));
 
   return (
-    <main className="w-full min-w-0 max-w-full space-y-10 overflow-x-hidden pt-10">
+    <main className="w-full min-w-0 max-w-full space-y-10 overflow-x-hidden">
       <header>
         <h1 className="text-2xl font-semibold text-neutral-900">Project Sections</h1>
         <p className="mt-1 text-sm text-neutral-600">

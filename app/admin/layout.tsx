@@ -50,7 +50,7 @@ if (role !== "admin" && role !== "owner") {
 
   return (
     <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-neutral-100">
-      <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 px-4 py-6">
+      <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4 px-4 pb-6 pt-2">
         <AdminSectionNav />
         <div className="min-w-0">{children}</div>
       </div>
