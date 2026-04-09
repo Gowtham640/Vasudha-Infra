@@ -70,6 +70,7 @@ export async function GET() {
 type PatchBody = {
   name: string;
   content: unknown;
+  is_visible?: boolean;
 };
 
 export async function PATCH(request: Request) {
@@ -81,12 +82,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { name, content } = body;
+  const { name, content, is_visible } = body;
   if (!name || typeof name !== "string") {
     return NextResponse.json({ error: "Section name is required." }, { status: 400 });
   }
   if (!isCmsName(name)) {
     return NextResponse.json({ error: "Section is not editable in Content Management." }, { status: 400 });
+  }
+  if (typeof is_visible !== "undefined" && typeof is_visible !== "boolean") {
+    return NextResponse.json({ error: "is_visible must be a boolean." }, { status: 400 });
   }
 
   try {
@@ -105,6 +109,16 @@ export async function PATCH(request: Request) {
   if (sectionError || !section?.id) {
     logContent("PATCH section lookup failed", { name, message: sectionError?.message });
     return NextResponse.json({ error: "Section not found." }, { status: 404 });
+  }
+
+  if (typeof is_visible === "boolean") {
+    const { error: visibilityUpdateError } = await supabase
+      .from("sections")
+      .update({ is_visible })
+      .eq("id", section.id);
+    if (visibilityUpdateError) {
+      return NextResponse.json({ error: visibilityUpdateError.message }, { status: 500 });
+    }
   }
 
   const { data: existing, error: existingError } = await supabase

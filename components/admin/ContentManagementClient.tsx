@@ -3,7 +3,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { createPortal } from "react-dom";
-import { Eye, SplitSquareHorizontal, X } from "lucide-react";
+import { Eye, EyeOff, SplitSquareHorizontal, X } from "lucide-react";
 import { getCmsEditorExtensions } from "../../lib/tiptap/cmsExtensions";
 import { emptyCmsDoc, parseCmsTiptapDoc } from "../../lib/tiptap/cmsDoc";
 import type { CmsContentSectionName } from "../../lib/types";
@@ -244,8 +244,8 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
   const [loading, setLoading] = useState(true);
   const [selectedName, setSelectedName] = useState<string>("");
   const [draft, setDraft] = useState<unknown>(emptyCmsDoc);
+  const [draftVisibility, setDraftVisibility] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [visibilitySaving, setVisibilitySaving] = useState(false);
   const [status, setStatus] = useState<string>("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("mobile");
@@ -312,6 +312,7 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
       return;
     }
     setDraft(parseCmsTiptapDoc(selectedRow.content).doc);
+    setDraftVisibility(selectedRow.is_visible !== false);
   }, [selectedRow]);
 
   const previewContentMap = useMemo(() => {
@@ -329,42 +330,6 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
     setSelectedName(name);
   };
 
-  const selectedVisibility = selectedRow?.is_visible !== false;
-
-  const updateVisibility = async (nextVisible: boolean) => {
-    if (!selectedName) {
-      return;
-    }
-    setVisibilitySaving(true);
-    setStatus("Saving visibility…");
-    try {
-      const response = await fetch("/api/admin/content-sections/visibility", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: selectedName as CmsContentSectionName,
-          isVisible: nextVisible,
-        }),
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        setStatus(body.error ?? "Visibility save failed.");
-        return;
-      }
-      setRows((previousRows) =>
-        previousRows.map((row) =>
-          row.name === selectedName ? { ...row, is_visible: nextVisible } : row
-        )
-      );
-      setStatus("Visibility saved.");
-    } catch (error) {
-      console.error("ContentManagement visibility", error);
-      setStatus("Visibility save error.");
-    } finally {
-      setVisibilitySaving(false);
-    }
-  };
-
   const save = async () => {
     if (!selectedName) {
       return;
@@ -378,6 +343,7 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
         body: JSON.stringify({
           name: selectedName as CmsContentSectionName,
           content: draft,
+          is_visible: draftVisibility,
         }),
       });
       if (!response.ok) {
@@ -424,25 +390,6 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
               </select>
             </label>
 
-            <label className="flex items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-white/70 px-4 py-3">
-              <div className="min-w-0">
-                <p className="font-medium text-neutral-900">
-                  {selectedVisibility ? "Hide section" : "Make section visible"}
-                </p>
-                
-              </div>
-              <input
-                type="checkbox"
-                checked={selectedVisibility}
-                disabled={visibilitySaving || !selectedName}
-                onChange={(event) => {
-                  void updateVisibility(event.target.checked);
-                }}
-                className="h-5 w-5 accent-green-700"
-                aria-label="Toggle selected section visibility"
-              />
-            </label>
-
             <CmsEditorField docJson={draft} onChange={setDraft} />
 
             <div className="flex items-center gap-3">
@@ -454,7 +401,17 @@ export function ContentManagementClient({ homePreviewProjects }: ContentManageme
               >
                 {saving ? "Saving…" : "Save"}
               </button>
-             
+              <button
+                type="button"
+                disabled={saving || !selectedName}
+                onClick={() => setDraftVisibility((currentValue) => !currentValue)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-700 transition hover:bg-neutral-100 disabled:opacity-50"
+                aria-label={draftVisibility ? "Section visible" : "Section hidden"}
+                title={draftVisibility ? "Section visible" : "Section hidden"}
+              >
+                {draftVisibility ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+              {status ? <span className="text-sm text-neutral-600">{status}</span> : null}
             </div>
            
           </div>

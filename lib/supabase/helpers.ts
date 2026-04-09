@@ -49,6 +49,11 @@ export async function getSectionContent(
     return null;
   }
 
+  // Respect CMS visibility toggles: hidden sections should not return content.
+  if (typedSection.is_visible === false) {
+    return null;
+  }
+
   const { data: sectionContent, error: sectionContentError } = await supabase
     .from("section_content")
     .select("content")
